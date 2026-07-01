@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import React from "react";
 import { PawPrint, CalendarDays, Pill, Syringe, FileText, Wallet, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -154,16 +155,16 @@ function HomePage() {
   );
 }
 
-function QAction({ icon: Icon, label }: any) {
+const QAction = React.forwardRef<HTMLButtonElement, any>(function QAction({ icon: Icon, label, ...props }, ref) {
   return (
-    <button className="flex flex-col items-center gap-1 rounded-2xl bg-card border border-border py-3 shadow-[var(--shadow-soft)] w-full">
+    <button ref={ref} {...props} className="flex flex-col items-center gap-1 rounded-2xl bg-card border border-border py-3 shadow-[var(--shadow-soft)] w-full">
       <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "var(--gradient-champagne)" }}>
         <Icon className="w-4 h-4 text-primary-foreground" strokeWidth={1.75} />
       </div>
       <span className="text-[10px] font-medium">{label}</span>
     </button>
   );
-}
+});
 
 function QuickAdd({ icon, label, table, fields, pets }: any) {
   return (
