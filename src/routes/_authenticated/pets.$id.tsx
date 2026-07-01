@@ -116,10 +116,10 @@ function PetDetail() {
   const [memorialNote, setMemorialNote] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState("");
 
+  if (isLoading || !pet) return <div className="text-center py-16 text-muted-foreground">Laden…</div>;
+
   const status = (pet as any).status ?? "active";
   const isArchived = status !== "active";
-
-  if (isLoading || !pet) return <div className="text-center py-16 text-muted-foreground">Laden…</div>;
 
   return (
     <>
