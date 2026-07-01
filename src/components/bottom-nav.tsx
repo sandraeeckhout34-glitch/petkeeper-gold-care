@@ -4,10 +4,10 @@ import { cn } from "@/lib/utils";
 
 const items = [
   { to: "/home", label: "Home", icon: Home },
-  { to: "/pets", label: "Pets", icon: PawPrint },
-  { to: "/calendar", label: "Calendar", icon: Calendar },
-  { to: "/expenses", label: "Expenses", icon: Wallet },
-  { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/pets", label: "Huisdieren", icon: PawPrint },
+  { to: "/calendar", label: "Kalender", icon: Calendar },
+  { to: "/expenses", label: "Kosten", icon: Wallet },
+  { to: "/settings", label: "Instellingen", icon: Settings },
 ] as const;
 
 export function BottomNav() {
