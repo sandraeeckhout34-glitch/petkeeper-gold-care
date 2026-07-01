@@ -48,6 +48,11 @@ function HomePage() {
   const today = format(new Date(), "yyyy-MM-dd");
   const in30 = format(new Date(Date.now() + 30 * 864e5), "yyyy-MM-dd");
   const monthKey = format(new Date(), "yyyy-MM");
+  const monthStart = `${monthKey}-01`;
+  const nextMonthStart = format(
+    new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1),
+    "yyyy-MM-dd",
+  );
 
   const profile = useQuery({
     queryKey: ["profile"],
@@ -93,7 +98,11 @@ function HomePage() {
   const expenses = useQuery({
     queryKey: ["expenses", "month", monthKey],
     queryFn: async () => {
-      const { data } = await supabase.from("expenses").select("amount,currency,date").ilike("date", `${monthKey}%`);
+      const { data } = await supabase
+        .from("expenses")
+        .select("amount,currency,date")
+        .gte("date", monthStart)
+        .lt("date", nextMonthStart);
       return data ?? [];
     },
   });
