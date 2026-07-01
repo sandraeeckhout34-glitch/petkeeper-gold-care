@@ -65,7 +65,7 @@ function HomePage() {
   const pets = useQuery({
     queryKey: ["pets"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("pets").select("*").eq("status","active").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("pets").select("*").eq("status","active").is("deleted_at", null).order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
@@ -74,24 +74,24 @@ function HomePage() {
   const appts = useQuery({
     queryKey: ["appointments", "today"],
     queryFn: async () => {
-      const { data } = await supabase.from("appointments").select("*, pets(name)").eq("date", today).order("time");
-      return data ?? [];
+      const { data } = await supabase.from("appointments").select("*, pets(name,status)").eq("date", today).order("time");
+      return (data ?? []).filter((row: any) => !row.pet_id || row.pets?.status !== "deleted");
     },
   });
 
   const meds = useQuery({
     queryKey: ["medications", "active"],
     queryFn: async () => {
-      const { data } = await supabase.from("medications").select("*, pets(name)").or(`end_date.is.null,end_date.gte.${today}`).limit(5);
-      return data ?? [];
+      const { data } = await supabase.from("medications").select("*, pets(name,status)").or(`end_date.is.null,end_date.gte.${today}`).limit(5);
+      return (data ?? []).filter((row: any) => !row.pet_id || row.pets?.status !== "deleted");
     },
   });
 
   const vacs = useQuery({
     queryKey: ["vaccinations", "upcoming"],
     queryFn: async () => {
-      const { data } = await supabase.from("vaccinations").select("*, pets(name)").gte("next_due_date", today).lte("next_due_date", in30).order("next_due_date").limit(5);
-      return data ?? [];
+      const { data } = await supabase.from("vaccinations").select("*, pets(name,status)").gte("next_due_date", today).lte("next_due_date", in30).order("next_due_date").limit(5);
+      return (data ?? []).filter((row: any) => !row.pet_id || row.pets?.status !== "deleted");
     },
   });
 
@@ -100,10 +100,10 @@ function HomePage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("expenses")
-        .select("amount,currency,date")
+        .select("amount,currency,date,pet_id,pets(status)")
         .gte("date", monthStart)
         .lt("date", nextMonthStart);
-      return data ?? [];
+      return (data ?? []).filter((row: any) => !row.pet_id || row.pets?.status !== "deleted");
     },
   });
 

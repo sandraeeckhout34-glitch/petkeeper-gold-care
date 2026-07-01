@@ -41,7 +41,7 @@ function PetDetail() {
   const { data: pet, isLoading } = useQuery({
     queryKey: ["pet", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("pets").select("*").eq("id", id).single();
+      const { data, error } = await supabase.from("pets").select("*").eq("id", id).neq("status", "deleted").maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -49,36 +49,12 @@ function PetDetail() {
 
   const del = useMutation({
     mutationFn: async () => {
-      const tables = ["appointments","medications","vaccinations","documents","weight_entries","expenses","reminders"] as const;
-      const [docs, exps] = await Promise.all([
-        supabase.from("documents").select("file_path").eq("pet_id", id),
-        supabase.from("expenses").select("invoice_path").eq("pet_id", id),
-      ]);
-      if (docs.error) throw docs.error;
-      if (exps.error) throw exps.error;
-
-      const documentPaths = [
-        ...((docs.data ?? []).map((d: any) => d.file_path).filter(Boolean)),
-        ...((exps.data ?? []).map((d: any) => d.invoice_path).filter(Boolean)),
-      ];
-      if (documentPaths.length) {
-        const { error } = await supabase.storage.from("pet-documents").remove(documentPaths);
-        if (error) throw error;
-      }
-
-      const petPhotoPath = extractStoragePath((pet as any)?.photo_url, "pet-photos");
-      if (petPhotoPath) {
-        const { error } = await supabase.storage.from("pet-photos").remove([petPhotoPath]);
-        if (error) throw error;
-      }
-
-      for (const t of tables) {
-        const { error } = await supabase.from(t).delete().eq("pet_id", id);
-        if (error) throw error;
-      }
-      const { error } = await supabase.from("pets").delete().eq("id", id);
+      const deletedAt = new Date().toISOString();
+      const { error } = await supabase
+        .from("pets")
+        .update({ status: "deleted", deleted_at: deletedAt, updated_at: deletedAt } as any)
+        .eq("id", id);
       if (error) throw error;
-      return { wasStatus: (pet as any)?.status ?? "active" };
     },
   });
 
@@ -124,7 +100,15 @@ function PetDetail() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  if (isLoading || !pet) return <div className="text-center py-16 text-muted-foreground">Laden…</div>;
+  if (isLoading) return <div className="text-center py-16 text-muted-foreground">Laden…</div>;
+  if (!pet) {
+    return (
+      <div className="text-center py-16 text-muted-foreground">
+        <p className="mb-4">Huisdier niet gevonden.</p>
+        <Button asChild className="rounded-full"><Link to="/home">Naar Home</Link></Button>
+      </div>
+    );
+  }
 
   const status = (pet as any).status ?? "active";
   const isArchived = status !== "active";
@@ -141,15 +125,13 @@ function PetDetail() {
     }
 
     try {
-      const result = await del.mutateAsync();
-      console.log("[PetKeeper] Permanent verwijderen uitgevoerd", { petId: id, status: result.wasStatus });
+      await del.mutateAsync();
+      console.log("[PetKeeper] Permanent verwijderen uitgevoerd", { petId: id, status: "deleted" });
       setDeleteOpen(false);
       setDeleteConfirm("");
       await qc.invalidateQueries();
-      toast.success("Huisdier permanent verwijderd");
-      if (result.wasStatus === "deceased") navigate({ to: "/deceased-pets" });
-      else if (result.wasStatus === "archived") navigate({ to: "/archived-pets" });
-      else navigate({ to: "/home" });
+      toast.success("Huisdier permanent verwijderd.");
+      navigate({ to: "/home" });
     } catch (error: any) {
       console.error("[PetKeeper] Permanent verwijderen mislukt", error);
       const message = error?.message || "Permanent verwijderen is mislukt.";
@@ -293,7 +275,7 @@ function PetDetail() {
       <Dialog open={deleteOpen} onOpenChange={(o) => { if (del.isPending) return; setDeleteOpen(o); if (!o) { setDeleteConfirm(""); setDeleteError(null); } }}>
         <DialogContent className="rounded-3xl max-w-md">
           <DialogHeader><DialogTitle className="font-display text-2xl text-destructive">Dit huisdier permanent verwijderen?</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">Dit verwijdert het huisdier en alle gekoppelde gegevens permanent, inclusief afspraken, medicatie, vaccinaties, documenten, gewichtsmetingen, kosten en herinneringen. Dit kan niet ongedaan worden gemaakt.</p>
+          <p className="text-sm text-muted-foreground">Dit verbergt het huisdier en alle gekoppelde gegevens overal in de app. Dit kan niet ongedaan worden gemaakt.</p>
           <div className="space-y-1.5">
             <Label className="text-xs uppercase tracking-wider text-muted-foreground">Typ <span className="font-mono text-destructive">DELETE</span> om te bevestigen</Label>
             <Input value={deleteConfirm} onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError(null); }} className="rounded-xl h-11" placeholder="DELETE" />
@@ -364,22 +346,6 @@ function PetDetail() {
       </Tabs>
     </>
   );
-}
-
-function extractStoragePath(value?: string | null, bucket?: string): string | null {
-  if (!value) return null;
-  if (!value.startsWith("http")) return value;
-
-  try {
-    const url = new URL(value);
-    const decodedPath = decodeURIComponent(url.pathname);
-    const marker = bucket ? `/${bucket}/` : "/";
-    const markerIndex = decodedPath.indexOf(marker);
-    if (markerIndex === -1) return null;
-    return decodedPath.slice(markerIndex + marker.length);
-  } catch {
-    return null;
-  }
 }
 
 function InfoList({ pet }: { pet: any }) {

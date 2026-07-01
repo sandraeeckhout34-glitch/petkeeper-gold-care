@@ -30,7 +30,7 @@ function CalendarPage() {
   const pets = useQuery({
     queryKey: ["pets"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("pets").select("id, name").eq("status","active").order("name");
+      const { data, error } = await supabase.from("pets").select("id, name").eq("status","active").is("deleted_at", null).order("name");
       if (error) throw error;
       return data ?? [];
     },
@@ -41,16 +41,17 @@ function CalendarPage() {
     enabled: !!day,
     queryFn: async () => {
       const [a, r, m, v] = await Promise.all([
-        supabase.from("appointments").select("*, pets(name)").eq("date", day).order("time"),
-        supabase.from("reminders").select("*, pets(name)").eq("date", day),
-        supabase.from("medications").select("*, pets(name)").lte("start_date", day).or(`end_date.is.null,end_date.gte.${day}`),
-        supabase.from("vaccinations").select("*, pets(name)").eq("next_due_date", day),
+        supabase.from("appointments").select("*, pets(name,status)").eq("date", day).order("time"),
+        supabase.from("reminders").select("*, pets(name,status)").eq("date", day),
+        supabase.from("medications").select("*, pets(name,status)").lte("start_date", day).or(`end_date.is.null,end_date.gte.${day}`),
+        supabase.from("vaccinations").select("*, pets(name,status)").eq("next_due_date", day),
       ]);
+      const visible = (rows: any[] | null) => (rows ?? []).filter((row: any) => !row.pet_id || row.pets?.status !== "deleted");
       return {
-        appointments: a.data ?? [],
-        reminders: r.data ?? [],
-        medications: m.data ?? [],
-        vaccinations: v.data ?? [],
+        appointments: visible(a.data),
+        reminders: visible(r.data),
+        medications: visible(m.data),
+        vaccinations: visible(v.data),
       };
     },
   });
