@@ -204,10 +204,6 @@ function PetDetail() {
                   </DropdownMenuItem>
                 </>
               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => setDeleteOpen(true)} className="text-destructive focus:text-destructive">
-                <Trash2 className="w-4 h-4 mr-2" /> 🗑️ Permanent verwijderen
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -281,48 +277,6 @@ function PetDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Permanent delete */}
-      <Dialog open={deleteOpen} onOpenChange={(o) => { if (isDeleteBusy) return; setDeleteOpen(o); if (!o) { setDeleteConfirm(""); setDeleteError(null); } }}>
-        <DialogContent className="rounded-3xl max-w-md">
-          <DialogHeader><DialogTitle className="font-display text-2xl text-destructive">Dit huisdier permanent verwijderen?</DialogTitle></DialogHeader>
-          <form
-            className="space-y-4"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void handlePermanentDelete(event.currentTarget);
-            }}
-          >
-            <p className="text-sm text-muted-foreground">Dit verbergt het huisdier en alle gekoppelde gegevens overal in de app. Dit kan niet ongedaan worden gemaakt.</p>
-            <div className="space-y-1.5">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Typ <span className="font-mono text-destructive">DELETE</span> om te bevestigen</Label>
-              <Input
-                ref={deleteInputRef}
-                name="deleteConfirmation"
-                value={deleteConfirm}
-                onInput={(e) => { setDeleteConfirm(e.currentTarget.value); setDeleteError(null); }}
-                onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError(null); }}
-                autoComplete="off"
-                autoCapitalize="characters"
-                className="rounded-xl h-11"
-                placeholder="DELETE"
-              />
-            </div>
-            {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
-            <DialogFooter className="gap-2">
-              <Button type="button" variant="secondary" disabled={isDeleteBusy} onClick={() => setDeleteOpen(false)} className="rounded-full h-11 flex-1">Annuleren</Button>
-              <Button
-                type="button"
-                aria-busy={isDeleteBusy}
-                onClick={(event) => void handlePermanentDelete(event.currentTarget.form)}
-                className="rounded-full h-11 flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {isDeleteBusy ? "Verwijderen…" : "Permanent verwijderen"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       <Tabs defaultValue="info" className="w-full">
         <TabsList className="w-full rounded-full bg-card border border-border p-1 h-11 grid grid-cols-6">
