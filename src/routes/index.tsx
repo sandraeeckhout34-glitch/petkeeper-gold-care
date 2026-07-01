@@ -32,19 +32,19 @@ function Welcome() {
         <div className="space-y-3">
           <h1 className="text-5xl font-display font-medium text-foreground">PetKeeper</h1>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            The refined companion for caring pet owners. Beautifully organize your pet's life.
+            De verfijnde metgezel voor zorgzame huisdiereigenaren. Organiseer het leven van je huisdier met stijl.
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase tracking-[0.2em]">
-          <Sparkles className="w-3 h-3" /> Elegantly designed
+          <Sparkles className="w-3 h-3" /> Elegant ontworpen
         </div>
       </div>
       <div className="w-full max-w-md space-y-3">
         <Button asChild size="lg" className="w-full h-14 rounded-full text-base font-medium shadow-[var(--shadow-soft)]">
-          <Link to="/auth" search={{ mode: "register" }}>Get Started</Link>
+          <Link to="/auth" search={{ mode: "register" }}>Beginnen</Link>
         </Button>
         <Button asChild variant="ghost" size="lg" className="w-full h-12 rounded-full text-foreground">
-          <Link to="/auth" search={{ mode: "login" }}>I already have an account</Link>
+          <Link to="/auth" search={{ mode: "login" }}>Ik heb al een account</Link>
         </Button>
       </div>
     </div>
