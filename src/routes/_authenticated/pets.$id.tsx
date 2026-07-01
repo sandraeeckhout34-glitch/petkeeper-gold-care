@@ -28,6 +28,15 @@ function PetDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const [deceasedOpen, setDeceasedOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [restoreOpen, setRestoreOpen] = useState(false);
+  const [deceasedDate, setDeceasedDate] = useState("");
+  const [memorialNote, setMemorialNote] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const editTriggerRef = useRef<HTMLButtonElement>(null);
 
   const { data: pet, isLoading } = useQuery({
     queryKey: ["pet", id],
@@ -40,18 +49,29 @@ function PetDetail() {
 
   const del = useMutation({
     mutationFn: async () => {
-      // Wipe linked records first (tables may not cascade)
       const tables = ["appointments","medications","vaccinations","documents","weight_entries","expenses","reminders"] as const;
-      // Fetch document/expense files so we can clean storage
       const [docs, exps] = await Promise.all([
         supabase.from("documents").select("file_path").eq("pet_id", id),
         supabase.from("expenses").select("invoice_path").eq("pet_id", id),
       ]);
-      const paths = [
+      if (docs.error) throw docs.error;
+      if (exps.error) throw exps.error;
+
+      const documentPaths = [
         ...((docs.data ?? []).map((d: any) => d.file_path).filter(Boolean)),
         ...((exps.data ?? []).map((d: any) => d.invoice_path).filter(Boolean)),
       ];
-      if (paths.length) await supabase.storage.from("pet-documents").remove(paths);
+      if (documentPaths.length) {
+        const { error } = await supabase.storage.from("pet-documents").remove(documentPaths);
+        if (error) throw error;
+      }
+
+      const petPhotoPath = extractStoragePath((pet as any)?.photo_url, "pet-photos");
+      if (petPhotoPath) {
+        const { error } = await supabase.storage.from("pet-photos").remove([petPhotoPath]);
+        if (error) throw error;
+      }
+
       for (const t of tables) {
         const { error } = await supabase.from(t).delete().eq("pet_id", id);
         if (error) throw error;
@@ -60,14 +80,6 @@ function PetDetail() {
       if (error) throw error;
       return { wasStatus: (pet as any)?.status ?? "active" };
     },
-    onSuccess: (res) => {
-      qc.invalidateQueries();
-      toast.success("Huisdier permanent verwijderd.");
-      if (res?.wasStatus === "deceased") navigate({ to: "/deceased-pets" });
-      else if (res?.wasStatus === "archived") navigate({ to: "/archived-pets" });
-      else navigate({ to: "/pets" });
-    },
-    onError: (e: any) => toast.error(e.message),
   });
 
   const archive = useMutation({
@@ -112,19 +124,39 @@ function PetDetail() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const [deceasedOpen, setDeceasedOpen] = useState(false);
-  const [archiveOpen, setArchiveOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [restoreOpen, setRestoreOpen] = useState(false);
-  const [deceasedDate, setDeceasedDate] = useState("");
-  const [memorialNote, setMemorialNote] = useState("");
-  const [deleteConfirm, setDeleteConfirm] = useState("");
-  const editTriggerRef = useRef<HTMLButtonElement>(null);
-
   if (isLoading || !pet) return <div className="text-center py-16 text-muted-foreground">Laden…</div>;
 
   const status = (pet as any).status ?? "active";
   const isArchived = status !== "active";
+  const isDeleteConfirmed = deleteConfirm.trim().toUpperCase() === "DELETE";
+  const handlePermanentDelete = async () => {
+    console.log("[PetKeeper] Permanent verwijderen knop geklikt", { petId: id, status, confirmed: isDeleteConfirmed });
+    setDeleteError(null);
+
+    if (!isDeleteConfirmed) {
+      const message = "Typ DELETE om permanent verwijderen te bevestigen.";
+      setDeleteError(message);
+      toast.error(message);
+      return;
+    }
+
+    try {
+      const result = await del.mutateAsync();
+      console.log("[PetKeeper] Permanent verwijderen uitgevoerd", { petId: id, status: result.wasStatus });
+      setDeleteOpen(false);
+      setDeleteConfirm("");
+      await qc.invalidateQueries();
+      toast.success("Huisdier permanent verwijderd");
+      if (result.wasStatus === "deceased") navigate({ to: "/deceased-pets" });
+      else if (result.wasStatus === "archived") navigate({ to: "/archived-pets" });
+      else navigate({ to: "/" });
+    } catch (error: any) {
+      console.error("[PetKeeper] Permanent verwijderen mislukt", error);
+      const message = error?.message || "Permanent verwijderen is mislukt.";
+      setDeleteError(message);
+      toast.error(message);
+    }
+  };
 
   return (
     <>
@@ -258,19 +290,21 @@ function PetDetail() {
       </AlertDialog>
 
       {/* Permanent delete */}
-      <Dialog open={deleteOpen} onOpenChange={(o) => { setDeleteOpen(o); if (!o) setDeleteConfirm(""); }}>
+      <Dialog open={deleteOpen} onOpenChange={(o) => { if (del.isPending) return; setDeleteOpen(o); if (!o) { setDeleteConfirm(""); setDeleteError(null); } }}>
         <DialogContent className="rounded-3xl max-w-md">
           <DialogHeader><DialogTitle className="font-display text-2xl text-destructive">Dit huisdier permanent verwijderen?</DialogTitle></DialogHeader>
           <p className="text-sm text-muted-foreground">Dit verwijdert het huisdier en alle gekoppelde gegevens permanent, inclusief afspraken, medicatie, vaccinaties, documenten, gewichtsmetingen, kosten en herinneringen. Dit kan niet ongedaan worden gemaakt.</p>
           <div className="space-y-1.5">
             <Label className="text-xs uppercase tracking-wider text-muted-foreground">Typ <span className="font-mono text-destructive">DELETE</span> om te bevestigen</Label>
-            <Input value={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.value)} className="rounded-xl h-11" placeholder="DELETE" />
+            <Input value={deleteConfirm} onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError(null); }} className="rounded-xl h-11" placeholder="DELETE" />
           </div>
+          {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
           <DialogFooter className="gap-2">
-            <Button variant="secondary" onClick={() => setDeleteOpen(false)} className="rounded-full h-11 flex-1">Annuleren</Button>
+            <Button type="button" variant="secondary" disabled={del.isPending} onClick={() => setDeleteOpen(false)} className="rounded-full h-11 flex-1">Annuleren</Button>
             <Button
-              disabled={deleteConfirm.trim().toUpperCase() !== "DELETE" || del.isPending}
-              onClick={() => del.mutate()}
+              type="button"
+              disabled={!isDeleteConfirmed || del.isPending}
+              onClick={handlePermanentDelete}
               className="rounded-full h-11 flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {del.isPending ? "Verwijderen…" : "Permanent verwijderen"}
