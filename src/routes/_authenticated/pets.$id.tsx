@@ -92,12 +92,13 @@ function PetDetail() {
       </div>
 
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="w-full rounded-full bg-card border border-border p-1 h-11 grid grid-cols-6">
+        <TabsList className="w-full rounded-full bg-card border border-border p-1 h-11 grid grid-cols-7">
           <TabsTrigger value="info" className="rounded-full text-[11px]">Info</TabsTrigger>
           <TabsTrigger value="med" className="rounded-full text-[11px]">Meds</TabsTrigger>
           <TabsTrigger value="vac" className="rounded-full text-[11px]">Vacc</TabsTrigger>
           <TabsTrigger value="app" className="rounded-full text-[11px]">Visits</TabsTrigger>
           <TabsTrigger value="wgt" className="rounded-full text-[11px]">Wgt</TabsTrigger>
+          <TabsTrigger value="exp" className="rounded-full text-[11px]">Cost</TabsTrigger>
           <TabsTrigger value="doc" className="rounded-full text-[11px]">Docs</TabsTrigger>
         </TabsList>
 
@@ -152,6 +153,20 @@ function PetDetail() {
             ]}
           />
         </TabsContent>
+        <TabsContent value="exp" className="mt-5">
+          <SubList petId={id} table="expenses" title="Expenses" primaryKey="title"
+            renderPrimary={(r) => `${r.title}`}
+            secondary={(r) => `${r.amount ?? 0} ${r.currency ?? "USD"} • ${r.category ?? ""} ${r.date ?? ""}`.trim()}
+            fields={[
+              { key: "title", label: "Title", type: "text" },
+              { key: "amount", label: "Amount", type: "number" },
+              { key: "currency", label: "Currency", type: "select", options: ["USD","EUR","GBP","CAD","AUD","JPY"] },
+              { key: "category", label: "Category", type: "select", options: ["Food","Vet","Grooming","Medication","Toys","Insurance","Boarding","Other"] },
+              { key: "date", label: "Date", type: "date" },
+              { key: "notes", label: "Notes", type: "textarea" },
+            ]}
+          />
+        </TabsContent>
         <TabsContent value="doc" className="mt-5">
           <DocsList petId={id} />
         </TabsContent>
@@ -188,7 +203,7 @@ function SubList({
   petId, table, title, primaryKey, renderPrimary, secondary, fields,
 }: {
   petId: string;
-  table: "medications" | "vaccinations" | "appointments" | "weight_entries";
+  table: "medications" | "vaccinations" | "appointments" | "weight_entries" | "expenses";
   title: string;
   primaryKey: string;
   renderPrimary?: (r: any) => string;

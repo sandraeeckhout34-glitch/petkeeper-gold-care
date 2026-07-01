@@ -173,7 +173,7 @@ export function SubRecordDialog({
   trigger, table, petId, title, fields, initial, onSaved,
 }: {
   trigger: ReactNode;
-  table: "medications" | "vaccinations" | "appointments" | "weight_entries" | "reminders";
+  table: "medications" | "vaccinations" | "appointments" | "weight_entries" | "reminders" | "expenses";
   petId?: string | null;
   title: string;
   fields: SubFieldDef[];

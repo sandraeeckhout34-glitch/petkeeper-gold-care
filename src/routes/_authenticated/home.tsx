@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { PawPrint, CalendarDays, Pill, Syringe, FileText, Bell, Plus, ArrowRight } from "lucide-react";
+import { PawPrint, CalendarDays, Pill, Wallet, Bell, Plus, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
@@ -81,9 +81,9 @@ function HomePage() {
           <QuickAdd icon={CalendarDays} label="Visit" table="appointments" pets={pets.data ?? []} />
           <QuickAdd icon={Pill} label="Med" table="medications" pets={pets.data ?? []} />
           <QuickAdd icon={Bell} label="Remind" table="reminders" pets={pets.data ?? []} />
-          <Link to="/pets" className="flex flex-col items-center gap-1 rounded-2xl bg-card border border-border py-3 shadow-[var(--shadow-soft)]">
-            <FileText className="w-5 h-5 text-primary" strokeWidth={1.75} />
-            <span className="text-[10px] font-medium">Docs</span>
+          <Link to="/expenses" className="flex flex-col items-center gap-1 rounded-2xl bg-card border border-border py-3 shadow-[var(--shadow-soft)]">
+            <Wallet className="w-5 h-5 text-primary" strokeWidth={1.75} />
+            <span className="text-[10px] font-medium">Costs</span>
           </Link>
         </div>
       </section>
