@@ -22,6 +22,7 @@ export type Database = {
           location: string | null
           notes: string | null
           pet_id: string
+          provider: string | null
           time: string | null
           title: string
           type: string | null
@@ -35,6 +36,7 @@ export type Database = {
           location?: string | null
           notes?: string | null
           pet_id: string
+          provider?: string | null
           time?: string | null
           title: string
           type?: string | null
@@ -48,6 +50,7 @@ export type Database = {
           location?: string | null
           notes?: string | null
           pet_id?: string
+          provider?: string | null
           time?: string | null
           title?: string
           type?: string | null

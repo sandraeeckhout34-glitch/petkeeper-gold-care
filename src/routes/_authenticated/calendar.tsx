@@ -112,29 +112,34 @@ function AddAppointmentDialog({
   const qc = useQueryClient();
   const [form, setForm] = useState({
     pet_id: "",
-    title: "",
+    type: "",
+    custom_title: "",
     date: defaultDate,
     time: "",
     location: "",
-    type: "",
+    provider: "",
     notes: "",
   });
 
   const mut = useMutation({
     mutationFn: async () => {
       if (!form.pet_id) throw new Error("Please choose a pet");
-      if (!form.title) throw new Error("Please add a title");
+      if (!form.type) throw new Error("Please choose an appointment type");
+      if (form.type === "Other" && !form.custom_title.trim())
+        throw new Error("Please add a custom appointment title");
       if (!form.date) throw new Error("Please pick a date");
+      const title = form.type === "Other" ? form.custom_title.trim() : form.type;
       const { data: u } = await supabase.auth.getUser();
       const { error } = await supabase.from("appointments").insert({
         user_id: u.user!.id,
         pet_id: form.pet_id,
-        title: form.title,
+        title,
         date: form.date,
         time: form.time || null,
         location: form.location || null,
         type: form.type || null,
         notes: form.notes || null,
+        provider: form.provider || null,
       });
       if (error) throw error;
     },
@@ -142,7 +147,7 @@ function AddAppointmentDialog({
       qc.invalidateQueries();
       toast.success("Appointment added");
       setOpen(false);
-      setForm({ pet_id: "", title: "", date: defaultDate, time: "", location: "", type: "", notes: "" });
+      setForm({ pet_id: "", type: "", custom_title: "", date: defaultDate, time: "", location: "", provider: "", notes: "" });
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -168,22 +173,39 @@ function AddAppointmentDialog({
                 </SelectContent>
               </Select>
             </F>
-            <F label="Title"><Input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="rounded-xl h-11" /></F>
+            <F label="Appointment Type">
+              <Select value={form.type || undefined} onValueChange={(v) => setForm({ ...form, type: v })}>
+                <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Choose type" /></SelectTrigger>
+                <SelectContent>
+                  {APPOINTMENT_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </F>
+            {form.type === "Other" && (
+              <F label="Custom Appointment Title">
+                <Input
+                  required
+                  value={form.custom_title}
+                  onChange={(e) => setForm({ ...form, custom_title: e.target.value })}
+                  className="rounded-xl h-11"
+                  placeholder="Enter a title"
+                />
+              </F>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <F label="Date"><Input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="rounded-xl h-11" /></F>
               <F label="Time"><Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} className="rounded-xl h-11" /></F>
             </div>
             <F label="Location"><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className="rounded-xl h-11" /></F>
-            <F label="Type">
-              <Select value={form.type || undefined} onValueChange={(v) => setForm({ ...form, type: v })}>
-                <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Choose" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Vet">Vet</SelectItem>
-                  <SelectItem value="Grooming">Grooming</SelectItem>
-                  <SelectItem value="Training">Training</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
-                </SelectContent>
-              </Select>
+            <F label="Veterinarian / Groomer">
+              <Input
+                value={form.provider}
+                onChange={(e) => setForm({ ...form, provider: e.target.value })}
+                className="rounded-xl h-11"
+                placeholder="Name of vet or groomer"
+              />
             </F>
             <F label="Notes"><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="rounded-xl" /></F>
             <DialogFooter>
@@ -197,6 +219,21 @@ function AddAppointmentDialog({
     </Dialog>
   );
 }
+
+const APPOINTMENT_TYPES = [
+  { value: "Veterinary Check-up", label: "🩺 Veterinary Check-up" },
+  { value: "Vaccination", label: "💉 Vaccination" },
+  { value: "Grooming", label: "✂️ Grooming" },
+  { value: "Dental Care", label: "🪥 Dental Care" },
+  { value: "Blood Test", label: "🧪 Blood Test" },
+  { value: "Medication Follow-up", label: "💊 Medication Follow-up" },
+  { value: "Deworming", label: "🐛 Deworming" },
+  { value: "Flea & Tick Treatment", label: "🦟 Flea & Tick Treatment" },
+  { value: "Weight Check", label: "⚖️ Weight Check" },
+  { value: "Surgery", label: "🏥 Surgery" },
+  { value: "Emergency", label: "🚑 Emergency" },
+  { value: "Other", label: "📋 Other" },
+];
 
 function F({ label, children }: { label: string; children: React.ReactNode }) {
   return (
