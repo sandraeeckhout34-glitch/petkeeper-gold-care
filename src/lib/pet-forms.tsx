@@ -358,7 +358,7 @@ export function SubRecordDialog({
     },
     onSuccess: () => {
       qc.invalidateQueries();
-      toast.success(initial?.id ? "Updated" : "Added");
+      toast.success(initial?.id ? "Bijgewerkt" : "Toegevoegd");
       setOpen(false);
       onSaved?.();
     },
