@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedPetsIndexRouteImport } from './routes/_authenticated/pets.index'
 import { Route as AuthenticatedPetsIdRouteImport } from './routes/_authenticated/pets.$id'
 
@@ -47,6 +48,11 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPetsIndexRoute = AuthenticatedPetsIndexRouteImport.update({
   id: '/pets/',
   path: '/pets/',
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
   '/pets/$id': typeof AuthenticatedPetsIdRoute
   '/pets/': typeof AuthenticatedPetsIndexRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
   '/pets/$id': typeof AuthenticatedPetsIdRoute
   '/pets': typeof AuthenticatedPetsIndexRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/pets/$id': typeof AuthenticatedPetsIdRoute
   '/_authenticated/pets/': typeof AuthenticatedPetsIndexRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/reset-password'
+    | '/calendar'
     | '/home'
     | '/pets/$id'
     | '/pets/'
@@ -103,6 +113,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/reset-password'
+    | '/calendar'
     | '/home'
     | '/pets/$id'
     | '/pets'
@@ -113,6 +124,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/reset-password'
+    | '/_authenticated/calendar'
     | '/_authenticated/home'
     | '/_authenticated/pets/$id'
     | '/_authenticated/pets/'
@@ -170,6 +182,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/calendar': {
+      id: '/_authenticated/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof AuthenticatedCalendarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/pets/': {
       id: '/_authenticated/pets/'
       path: '/pets'
@@ -188,12 +207,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedPetsIdRoute: typeof AuthenticatedPetsIdRoute
   AuthenticatedPetsIndexRoute: typeof AuthenticatedPetsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedPetsIdRoute: AuthenticatedPetsIdRoute,
   AuthenticatedPetsIndexRoute: AuthenticatedPetsIndexRoute,
