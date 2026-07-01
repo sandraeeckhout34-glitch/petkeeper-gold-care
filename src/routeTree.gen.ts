@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedRemindersRouteImport } from './routes/_authenticated/reminders'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedPetsIndexRouteImport } from './routes/_authenticated/pets.index'
 import { Route as AuthenticatedPetsIdRouteImport } from './routes/_authenticated/pets.$id'
@@ -60,6 +61,11 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedExpensesRoute = AuthenticatedExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/calendar': typeof AuthenticatedCalendarRoute
+  '/expenses': typeof AuthenticatedExpensesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/reminders': typeof AuthenticatedRemindersRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/calendar': typeof AuthenticatedCalendarRoute
+  '/expenses': typeof AuthenticatedExpensesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/reminders': typeof AuthenticatedRemindersRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
+  '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/reminders': typeof AuthenticatedRemindersRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -122,6 +131,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/reset-password'
     | '/calendar'
+    | '/expenses'
     | '/home'
     | '/reminders'
     | '/settings'
@@ -134,6 +144,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/reset-password'
     | '/calendar'
+    | '/expenses'
     | '/home'
     | '/reminders'
     | '/settings'
@@ -147,6 +158,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/reset-password'
     | '/_authenticated/calendar'
+    | '/_authenticated/expenses'
     | '/_authenticated/home'
     | '/_authenticated/reminders'
     | '/_authenticated/settings'
@@ -220,6 +232,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/expenses': {
+      id: '/_authenticated/expenses'
+      path: '/expenses'
+      fullPath: '/expenses'
+      preLoaderRoute: typeof AuthenticatedExpensesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/calendar': {
       id: '/_authenticated/calendar'
       path: '/calendar'
@@ -246,6 +265,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
+  AuthenticatedExpensesRoute: typeof AuthenticatedExpensesRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedRemindersRoute: typeof AuthenticatedRemindersRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -255,6 +275,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
+  AuthenticatedExpensesRoute: AuthenticatedExpensesRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedRemindersRoute: AuthenticatedRemindersRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
