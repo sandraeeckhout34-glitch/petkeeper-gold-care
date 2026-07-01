@@ -83,9 +83,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "PetKeeper is the elegant way to care for your pets: track pets, appointments, medications, vaccinations, documents and reminders." },
       { name: "author", content: "PetKeeper" },
       { property: "og:title", content: "PetKeeper — Luxury Pet Management" },
-      { property: "og:description", content: "Elegant pet management for iPhone and Android." },
+      { property: "og:description", content: "PetKeeper is the elegant way to care for your pets: track pets, appointments, medications, vaccinations, documents and reminders." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "PetKeeper — Luxury Pet Management" },
+      { name: "twitter:description", content: "PetKeeper is the elegant way to care for your pets: track pets, appointments, medications, vaccinations, documents and reminders." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/41fc4034-1a00-4949-bb6d-dcb7db31826e/id-preview-16722606--6ec0deba-d670-4a67-aa6f-eb8496c1027c.lovable.app-1782890584347.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/41fc4034-1a00-4949-bb6d-dcb7db31826e/id-preview-16722606--6ec0deba-d670-4a67-aa6f-eb8496c1027c.lovable.app-1782890584347.png" },
     ],
     links: [
       {
