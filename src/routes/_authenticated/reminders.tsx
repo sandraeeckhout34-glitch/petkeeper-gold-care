@@ -33,7 +33,7 @@ function RemindersPage() {
     queryFn: async () => {
       const { data, error } = await supabase.from("reminders").select("*, pets(name,status,deleted_at)").order("date", { ascending: true }).order("time", { ascending: true });
       if (error) throw error;
-      return (data ?? []).filter((row: any) => !row.pet_id || (row.pets?.status !== "deleted" && !row.pets?.deleted_at));
+      return (data ?? []).filter((row: any) => !row.pet_id || (!!row.pets && row.pets.status !== "deleted" && !row.pets.deleted_at));
     },
   });
 

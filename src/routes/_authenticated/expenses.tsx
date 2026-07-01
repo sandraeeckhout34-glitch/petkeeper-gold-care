@@ -29,7 +29,7 @@ function ExpensesPage() {
         .order("date", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []).filter((row: any) => !row.pet_id || (row.pets?.status !== "deleted" && !row.pets?.deleted_at));
+      return (data ?? []).filter((row: any) => !row.pet_id || (!!row.pets && row.pets.status !== "deleted" && !row.pets.deleted_at));
     },
   });
 

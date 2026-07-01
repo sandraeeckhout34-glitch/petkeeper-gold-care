@@ -179,7 +179,7 @@ function HomePage() {
 }
 
 function isVisiblePetRecord(row: any) {
-  return !row.pet_id || (row.pets?.status !== "deleted" && !row.pets?.deleted_at);
+  return !row.pet_id || (!!row.pets && row.pets.status !== "deleted" && !row.pets.deleted_at);
 }
 
 const QAction = React.forwardRef<HTMLButtonElement, any>(function QAction({ icon: Icon, label, ...props }, ref) {

@@ -83,7 +83,7 @@ function CalendarPage() {
 }
 
 function isVisiblePetRecord(row: any) {
-  return !row.pet_id || (row.pets?.status !== "deleted" && !row.pets?.deleted_at);
+  return !row.pet_id || (!!row.pets && row.pets.status !== "deleted" && !row.pets.deleted_at);
 }
 
 function Section({ icon: Icon, title, items, render, empty }: any) {
