@@ -196,7 +196,7 @@ function SectionHeader({ title, to }: { title: string; to?: string }) {
       <h2 className="font-display text-xl">{title}</h2>
       {to && (
         <Link to={to} className="text-xs text-muted-foreground inline-flex items-center gap-1">
-          See all <ArrowRight className="w-3 h-3" />
+          Bekijk alles <ArrowRight className="w-3 h-3" />
         </Link>
       )}
     </div>
