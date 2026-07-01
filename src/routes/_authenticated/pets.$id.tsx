@@ -36,6 +36,7 @@ function PetDetail() {
   const [memorialNote, setMemorialNote] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const editTriggerRef = useRef<HTMLButtonElement>(null);
   const deleteInputRef = useRef<HTMLInputElement>(null);
 
@@ -114,8 +115,12 @@ function PetDetail() {
   const status = (pet as any).status ?? "active";
   const isArchived = status !== "active";
   const isDeleteConfirmed = deleteConfirm.trim().toUpperCase() === "DELETE";
-  const handlePermanentDelete = async () => {
-    const typedConfirmation = deleteInputRef.current?.value ?? deleteConfirm;
+  const isDeleteBusy = del.isPending || deleteSubmitting;
+  const handlePermanentDelete = async (form?: HTMLFormElement | null) => {
+    if (isDeleteBusy) return;
+
+    const formConfirmation = form ? String(new FormData(form).get("deleteConfirmation") ?? "") : "";
+    const typedConfirmation = formConfirmation || deleteInputRef.current?.value || deleteConfirm;
     const confirmed = typedConfirmation.trim().toUpperCase() === "DELETE";
     console.log("[PetKeeper] Permanent verwijderen knop geklikt", { petId: id, status, confirmed });
     setDeleteError(null);
@@ -127,11 +132,13 @@ function PetDetail() {
       return;
     }
 
+    setDeleteSubmitting(true);
     try {
       await del.mutateAsync();
       console.log("[PetKeeper] Permanent verwijderen uitgevoerd", { petId: id, status: "deleted" });
       setDeleteOpen(false);
       setDeleteConfirm("");
+      qc.removeQueries({ queryKey: ["pet", id] });
       await qc.invalidateQueries();
       toast.success("Huisdier permanent verwijderd.");
       navigate({ to: "/home" });
@@ -140,6 +147,8 @@ function PetDetail() {
       const message = error?.message || "Permanent verwijderen is mislukt.";
       setDeleteError(message);
       toast.error(message);
+    } finally {
+      setDeleteSubmitting(false);
     }
   };
 
@@ -275,26 +284,44 @@ function PetDetail() {
       </AlertDialog>
 
       {/* Permanent delete */}
-      <Dialog open={deleteOpen} onOpenChange={(o) => { if (del.isPending) return; setDeleteOpen(o); if (!o) { setDeleteConfirm(""); setDeleteError(null); } }}>
+      <Dialog open={deleteOpen} onOpenChange={(o) => { if (isDeleteBusy) return; setDeleteOpen(o); if (!o) { setDeleteConfirm(""); setDeleteError(null); } }}>
         <DialogContent className="rounded-3xl max-w-md">
           <DialogHeader><DialogTitle className="font-display text-2xl text-destructive">Dit huisdier permanent verwijderen?</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">Dit verbergt het huisdier en alle gekoppelde gegevens overal in de app. Dit kan niet ongedaan worden gemaakt.</p>
-          <div className="space-y-1.5">
-            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Typ <span className="font-mono text-destructive">DELETE</span> om te bevestigen</Label>
-            <Input ref={deleteInputRef} value={deleteConfirm} onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError(null); }} className="rounded-xl h-11" placeholder="DELETE" />
-          </div>
-          {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
-          <DialogFooter className="gap-2">
-            <Button type="button" variant="secondary" disabled={del.isPending} onClick={() => setDeleteOpen(false)} className="rounded-full h-11 flex-1">Annuleren</Button>
-            <Button
-              type="button"
-              disabled={del.isPending}
-              onClick={handlePermanentDelete}
-              className="rounded-full h-11 flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {del.isPending ? "Verwijderen…" : "Permanent verwijderen"}
-            </Button>
-          </DialogFooter>
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handlePermanentDelete(event.currentTarget);
+            }}
+          >
+            <p className="text-sm text-muted-foreground">Dit verbergt het huisdier en alle gekoppelde gegevens overal in de app. Dit kan niet ongedaan worden gemaakt.</p>
+            <div className="space-y-1.5">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Typ <span className="font-mono text-destructive">DELETE</span> om te bevestigen</Label>
+              <Input
+                ref={deleteInputRef}
+                name="deleteConfirmation"
+                value={deleteConfirm}
+                onInput={(e) => { setDeleteConfirm(e.currentTarget.value); setDeleteError(null); }}
+                onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError(null); }}
+                autoComplete="off"
+                autoCapitalize="characters"
+                className="rounded-xl h-11"
+                placeholder="DELETE"
+              />
+            </div>
+            {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
+            <DialogFooter className="gap-2">
+              <Button type="button" variant="secondary" disabled={isDeleteBusy} onClick={() => setDeleteOpen(false)} className="rounded-full h-11 flex-1">Annuleren</Button>
+              <Button
+                type="button"
+                aria-busy={isDeleteBusy}
+                onClick={(event) => void handlePermanentDelete(event.currentTarget.form)}
+                className="rounded-full h-11 flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleteBusy ? "Verwijderen…" : "Permanent verwijderen"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
