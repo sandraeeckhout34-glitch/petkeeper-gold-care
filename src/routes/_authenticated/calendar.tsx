@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/calendar")({
-  head: () => ({ meta: [{ title: "Calendar — PetKeeper" }] }),
+  head: () => ({ meta: [{ title: "Kalender — PetKeeper" }] }),
   component: CalendarPage,
 });
 
@@ -57,26 +57,26 @@ function CalendarPage() {
 
   return (
     <>
-      <PageHeader subtitle="Your schedule" title="Calendar" />
+      <PageHeader subtitle="Jouw agenda" title="Kalender" />
       <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] p-3 mb-6">
         <Calendar mode="single" selected={selected} onSelect={(d) => d && setSelected(d)} className="w-full pointer-events-auto" />
       </div>
       <div className="flex items-center justify-between mb-3 gap-3">
-        <h2 className="font-display text-lg truncate">{selected ? format(selected, "EEEE, MMM d") : ""}</h2>
+        <h2 className="font-display text-lg truncate">{selected ? format(selected, "EEEE d MMM") : ""}</h2>
         <AddAppointmentDialog
           defaultDate={day}
           pets={pets.data ?? []}
           trigger={
             <Button size="sm" className="rounded-full h-9 px-4 gap-1.5 shrink-0">
-              <Plus className="w-4 h-4" /> Add Appointment
+              <Plus className="w-4 h-4" /> Afspraak toevoegen
             </Button>
           }
         />
       </div>
-      <Section icon={CalendarIcon} title="Appointments" items={events?.appointments ?? []} empty="No appointments" render={(a: any) => `${a.title} • ${a.pets?.name ?? ""} ${a.time ?? ""}`} />
-      <Section icon={Pill} title="Medications" items={events?.medications ?? []} empty="No medications" render={(m: any) => `${m.name} • ${m.pets?.name ?? ""} ${m.dosage ?? ""}`} />
-      <Section icon={Syringe} title="Vaccinations due" items={events?.vaccinations ?? []} empty="No vaccinations due" render={(v: any) => `${v.vaccine} • ${v.pets?.name ?? ""}`} />
-      <Section icon={Bell} title="Reminders" items={events?.reminders ?? []} empty="No reminders" render={(r: any) => `${r.title} • ${r.time ?? ""}`} />
+      <Section icon={CalendarIcon} title="Afspraken" items={events?.appointments ?? []} empty="Geen afspraken" render={(a: any) => `${a.title} • ${a.pets?.name ?? ""} ${(a.time ?? "").slice(0,5)}`} />
+      <Section icon={Pill} title="Medicatie" items={events?.medications ?? []} empty="Geen medicatie" render={(m: any) => `${m.name} • ${m.pets?.name ?? ""} ${m.dosage ?? ""}`} />
+      <Section icon={Syringe} title="Vaccinaties" items={events?.vaccinations ?? []} empty="Geen vaccinaties" render={(v: any) => `${v.vaccine} • ${v.pets?.name ?? ""}`} />
+      <Section icon={Bell} title="Herinneringen" items={events?.reminders ?? []} empty="Geen herinneringen" render={(r: any) => `${r.title} • ${(r.time ?? "").slice(0,5)}`} />
     </>
   );
 }
@@ -159,23 +159,23 @@ function AddAppointmentDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-md rounded-3xl">
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl">New appointment</DialogTitle>
+          <DialogTitle className="font-display text-2xl">Nieuwe afspraak</DialogTitle>
         </DialogHeader>
         {noPets ? (
-          <p className="text-sm text-muted-foreground py-4">Add a pet first before creating an appointment.</p>
+          <p className="text-sm text-muted-foreground py-4">Voeg eerst een huisdier toe voordat je een afspraak maakt.</p>
         ) : (
           <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
-            <F label="Pet">
+            <F label="Huisdier">
               <Select value={form.pet_id || undefined} onValueChange={(v) => setForm({ ...form, pet_id: v })}>
-                <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Choose a pet" /></SelectTrigger>
+                <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Kies een huisdier" /></SelectTrigger>
                 <SelectContent>
                   {pets.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </F>
-            <F label="Appointment Type">
+            <F label="Type afspraak">
               <Select value={form.type || undefined} onValueChange={(v) => setForm({ ...form, type: v })}>
-                <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Choose type" /></SelectTrigger>
+                <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Kies een type" /></SelectTrigger>
                 <SelectContent>
                   {APPOINTMENT_TYPES.map((t) => (
                     <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
@@ -184,33 +184,33 @@ function AddAppointmentDialog({
               </Select>
             </F>
             {form.type === "Other" && (
-              <F label="Custom Appointment Title">
+              <F label="Eigen titel afspraak">
                 <Input
                   required
                   value={form.custom_title}
                   onChange={(e) => setForm({ ...form, custom_title: e.target.value })}
                   className="rounded-xl h-11"
-                  placeholder="Enter a title"
+                  placeholder="Voer een titel in"
                 />
               </F>
             )}
             <div className="grid grid-cols-2 gap-3">
-              <F label="Date"><Input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="rounded-xl h-11" /></F>
-              <F label="Time"><Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} className="rounded-xl h-11" /></F>
+              <F label="Datum"><Input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="rounded-xl h-11" /></F>
+              <F label="Tijd"><Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} className="rounded-xl h-11" /></F>
             </div>
-            <F label="Location"><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className="rounded-xl h-11" /></F>
-            <F label="Veterinarian / Groomer">
+            <F label="Locatie"><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className="rounded-xl h-11" /></F>
+            <F label="Dierenarts / Trimmer">
               <Input
                 value={form.provider}
                 onChange={(e) => setForm({ ...form, provider: e.target.value })}
                 className="rounded-xl h-11"
-                placeholder="Name of vet or groomer"
+                placeholder="Naam van dierenarts of trimmer"
               />
             </F>
-            <F label="Notes"><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="rounded-xl" /></F>
+            <F label="Notities"><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="rounded-xl" /></F>
             <DialogFooter>
               <Button type="submit" disabled={mut.isPending} className="w-full h-12 rounded-full">
-                {mut.isPending ? "Saving…" : "Save appointment"}
+                {mut.isPending ? "Opslaan…" : "Afspraak opslaan"}
               </Button>
             </DialogFooter>
           </form>
@@ -221,18 +221,18 @@ function AddAppointmentDialog({
 }
 
 const APPOINTMENT_TYPES = [
-  { value: "Veterinary Check-up", label: "🩺 Veterinary Check-up" },
-  { value: "Vaccination", label: "💉 Vaccination" },
-  { value: "Grooming", label: "✂️ Grooming" },
-  { value: "Dental Care", label: "🪥 Dental Care" },
-  { value: "Blood Test", label: "🧪 Blood Test" },
-  { value: "Medication Follow-up", label: "💊 Medication Follow-up" },
-  { value: "Deworming", label: "🐛 Deworming" },
-  { value: "Flea & Tick Treatment", label: "🦟 Flea & Tick Treatment" },
-  { value: "Weight Check", label: "⚖️ Weight Check" },
-  { value: "Surgery", label: "🏥 Surgery" },
-  { value: "Emergency", label: "🚑 Emergency" },
-  { value: "Other", label: "📋 Other" },
+  { value: "Veterinary Check-up", label: "🩺 Dierenartscontrole" },
+  { value: "Vaccination", label: "💉 Vaccinatie" },
+  { value: "Grooming", label: "✂️ Trimmen" },
+  { value: "Dental Care", label: "🪥 Gebitsverzorging" },
+  { value: "Blood Test", label: "🧪 Bloedonderzoek" },
+  { value: "Medication Follow-up", label: "💊 Medicatiecontrole" },
+  { value: "Deworming", label: "🐛 Ontwormen" },
+  { value: "Flea & Tick Treatment", label: "🦟 Vlooien & Teken" },
+  { value: "Weight Check", label: "⚖️ Gewichtscontrole" },
+  { value: "Surgery", label: "🏥 Operatie" },
+  { value: "Emergency", label: "🚑 Spoed" },
+  { value: "Other", label: "📋 Anders" },
 ];
 
 function F({ label, children }: { label: string; children: React.ReactNode }) {
