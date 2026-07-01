@@ -123,11 +123,11 @@ function AddAppointmentDialog({
 
   const mut = useMutation({
     mutationFn: async () => {
-      if (!form.pet_id) throw new Error("Please choose a pet");
-      if (!form.type) throw new Error("Please choose an appointment type");
+      if (!form.pet_id) throw new Error("Kies een huisdier");
+      if (!form.type) throw new Error("Kies een type afspraak");
       if (form.type === "Other" && !form.custom_title.trim())
-        throw new Error("Please add a custom appointment title");
-      if (!form.date) throw new Error("Please pick a date");
+        throw new Error("Voer een eigen titel in");
+      if (!form.date) throw new Error("Kies een datum");
       const title = form.type === "Other" ? form.custom_title.trim() : form.type;
       const { data: u } = await supabase.auth.getUser();
       const { error } = await supabase.from("appointments").insert({
@@ -145,7 +145,7 @@ function AddAppointmentDialog({
     },
     onSuccess: () => {
       qc.invalidateQueries();
-      toast.success("Appointment added");
+      toast.success("Afspraak toegevoegd");
       setOpen(false);
       setForm({ pet_id: "", type: "", custom_title: "", date: defaultDate, time: "", location: "", provider: "", notes: "" });
     },

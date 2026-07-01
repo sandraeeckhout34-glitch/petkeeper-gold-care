@@ -24,8 +24,8 @@ function PetsPage() {
   return (
     <>
       <PageHeader
-        subtitle="Your companions"
-        title="Pets"
+        subtitle="Jouw gezelschap"
+        title="Huisdieren"
         action={
           <PetFormDialog trigger={
             <Button size="icon" className="rounded-full w-11 h-11 shadow-[var(--shadow-soft)]">
@@ -40,9 +40,9 @@ function PetsPage() {
           <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: "var(--gradient-champagne)" }}>
             <PawPrint className="w-7 h-7 text-primary-foreground" strokeWidth={1.5} />
           </div>
-          <h3 className="font-display text-xl mb-2">No pets yet</h3>
-          <p className="text-sm text-muted-foreground mb-5">Add your first pet to unlock the full PetKeeper experience.</p>
-          <PetFormDialog trigger={<Button className="rounded-full">Add your first pet</Button>} />
+          <h3 className="font-display text-xl mb-2">Nog geen huisdieren</h3>
+          <p className="text-sm text-muted-foreground mb-5">Voeg je eerste huisdier toe om PetKeeper volledig te gebruiken.</p>
+          <PetFormDialog trigger={<Button className="rounded-full">Huisdier toevoegen</Button>} />
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4">
