@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, Wallet, CheckCircle2, Circle, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { nl } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -38,18 +39,18 @@ function ExpensesPage() {
       const { error } = await supabase.from("expenses").delete().eq("id", row.id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["expenses"] }); toast.success("Removed"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["expenses"] }); toast.success("Verwijderd"); },
   });
 
   const monthKey = format(new Date(), "yyyy-MM");
-  const currency = (data?.[0] as any)?.currency ?? "USD";
-  const fmt = (n: number, c: string) => new Intl.NumberFormat(undefined, { style: "currency", currency: c }).format(n);
+  const currency = (data?.[0] as any)?.currency ?? "EUR";
+  const fmt = (n: number, c: string) => new Intl.NumberFormat("nl-NL", { style: "currency", currency: c || "EUR" }).format(n);
   const monthTotal = (data ?? []).filter((r: any) => (r.date ?? "").startsWith(monthKey))
     .reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const total = (data ?? []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const perPet = new Map<string, number>();
   (data ?? []).forEach((r: any) => {
-    const key = r.pets?.name ?? "Unassigned";
+    const key = r.pets?.name ?? "Onbekend";
     perPet.set(key, (perPet.get(key) ?? 0) + Number(r.amount || 0));
   });
 
@@ -62,13 +63,13 @@ function ExpensesPage() {
   return (
     <>
       <PageHeader
-        subtitle="Care spending"
-        title="Expenses"
+        subtitle="Uitgaven aan verzorging"
+        title="Kosten"
         action={
           <SubRecordDialog
             table="expenses"
             pets={pets ?? []}
-            title="New expense"
+            title="Nieuwe kostenpost"
             fields={expenseFields}
             trigger={<Button size="icon" className="rounded-full w-11 h-11 shadow-[var(--shadow-soft)]"><Plus className="w-5 h-5" /></Button>}
           />
@@ -77,18 +78,18 @@ function ExpensesPage() {
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] p-4">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">This month</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">{format(new Date(), "MMMM yyyy", { locale: nl })}</div>
           <div className="font-display text-2xl">{fmt(monthTotal, currency)}</div>
         </div>
         <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] p-4">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">All time</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Totaal</div>
           <div className="font-display text-2xl">{fmt(total, currency)}</div>
         </div>
       </div>
 
       {perPet.size > 0 && (
         <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] p-4 mb-6">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Per pet</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Per huisdier</div>
           <div className="space-y-1.5">
             {Array.from(perPet.entries()).map(([name, sum]) => (
               <div key={name} className="flex justify-between text-sm">
@@ -100,20 +101,20 @@ function ExpensesPage() {
         </div>
       )}
 
-      <h2 className="font-display text-lg mb-3">Recent expenses</h2>
+      <h2 className="font-display text-lg mb-3">Recente kosten</h2>
 
       {!data || data.length === 0 ? (
         <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] p-10 text-center">
           <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: "var(--gradient-champagne)" }}>
             <Wallet className="w-6 h-6 text-primary-foreground" strokeWidth={1.5} />
           </div>
-          <p className="text-sm text-muted-foreground">No expenses yet</p>
+          <p className="text-sm text-muted-foreground">Nog geen kosten</p>
         </div>
       ) : (
         <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] divide-y divide-border overflow-hidden">
           {data.map((r: any) => (
             <div key={r.id} className="px-5 py-4 flex items-start gap-3">
-              <button onClick={() => openInvoice(r)} className="mt-0.5 text-muted-foreground" title={r.invoice_path ? "Open invoice" : "No invoice"}>
+              <button onClick={() => openInvoice(r)} className="mt-0.5 text-muted-foreground" title={r.invoice_path ? "Factuur openen" : "Geen factuur"}>
                 {r.paid ? <CheckCircle2 className="w-4 h-4 text-primary" /> : <Circle className="w-4 h-4" />}
               </button>
               <div className="flex-1 min-w-0">
@@ -125,8 +126,8 @@ function ExpensesPage() {
                   {[r.category, r.date, r.pets?.name].filter(Boolean).join(" • ")}
                 </div>
               </div>
-              <div className="text-sm font-medium whitespace-nowrap">{fmt(Number(r.amount || 0), r.currency || "USD")}</div>
-              <SubRecordDialog table="expenses" pets={pets ?? []} title="Edit expense" fields={expenseFields} initial={r}
+              <div className="text-sm font-medium whitespace-nowrap">{fmt(Number(r.amount || 0), r.currency || "EUR")}</div>
+              <SubRecordDialog table="expenses" pets={pets ?? []} title="Kosten bewerken" fields={expenseFields} initial={r}
                 trigger={<Button variant="ghost" size="icon" className="rounded-full h-8 w-8"><Pencil className="w-4 h-4" /></Button>} />
               <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 text-destructive" onClick={() => del.mutate(r)}>
                 <Trash2 className="w-4 h-4" />
