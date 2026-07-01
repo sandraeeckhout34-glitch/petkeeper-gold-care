@@ -58,11 +58,14 @@ function PetDetail() {
       }
       const { error } = await supabase.from("pets").delete().eq("id", id);
       if (error) throw error;
+      return { wasStatus: (pet as any)?.status ?? "active" };
     },
-    onSuccess: () => {
+    onSuccess: (res) => {
       qc.invalidateQueries();
-      toast.success("Huisdier permanent verwijderd");
-      navigate({ to: "/pets" });
+      toast.success("Huisdier permanent verwijderd.");
+      if (res?.wasStatus === "deceased") navigate({ to: "/deceased-pets" });
+      else if (res?.wasStatus === "archived") navigate({ to: "/archived-pets" });
+      else navigate({ to: "/pets" });
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -266,7 +269,7 @@ function PetDetail() {
           <DialogFooter className="gap-2">
             <Button variant="secondary" onClick={() => setDeleteOpen(false)} className="rounded-full h-11 flex-1">Annuleren</Button>
             <Button
-              disabled={deleteConfirm !== "DELETE" || del.isPending}
+              disabled={deleteConfirm.trim().toUpperCase() !== "DELETE" || del.isPending}
               onClick={() => del.mutate()}
               className="rounded-full h-11 flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
