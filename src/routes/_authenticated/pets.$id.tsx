@@ -11,7 +11,7 @@ import {
   medicationFields, vaccinationFields, expenseFields,
 } from "@/lib/pet-forms";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -116,6 +116,7 @@ function PetDetail() {
   const [deceasedDate, setDeceasedDate] = useState("");
   const [memorialNote, setMemorialNote] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState("");
+  const editTriggerRef = useRef<HTMLButtonElement>(null);
 
   if (isLoading || !pet) return <div className="text-center py-16 text-muted-foreground">Laden…</div>;
 
@@ -156,6 +157,10 @@ function PetDetail() {
               <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 shrink-0"><MoreVertical className="w-5 h-5" /></Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="rounded-2xl min-w-52">
+              <DropdownMenuItem onSelect={() => setTimeout(() => editTriggerRef.current?.click(), 0)}>
+                <Pencil className="w-4 h-4 mr-2" /> ✏️ Huisdier bewerken
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               {isArchived && (
                 <DropdownMenuItem onSelect={() => setRestoreOpen(true)}>
                   <RotateCcw className="w-4 h-4 mr-2" /> Terugplaatsen
@@ -164,20 +169,22 @@ function PetDetail() {
               {!isArchived && (
                 <>
                   <DropdownMenuItem onSelect={() => setDeceasedOpen(true)}>
-                    <Heart className="w-4 h-4 mr-2" /> Markeer als overleden
+                    <Heart className="w-4 h-4 mr-2" /> 🕊️ Markeer als overleden
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setArchiveOpen(true)}>
-                    <Archive className="w-4 h-4 mr-2" /> Huisdier archiveren
+                    <Archive className="w-4 h-4 mr-2" /> 📦 Huisdier archiveren
                   </DropdownMenuItem>
                 </>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => setDeleteOpen(true)} className="text-destructive focus:text-destructive">
-                <Trash2 className="w-4 h-4 mr-2" /> Permanent verwijderen
+                <Trash2 className="w-4 h-4 mr-2" /> 🗑️ Permanent verwijderen
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        {/* Hidden trigger so the Actions menu can open the edit dialog */}
+        <PetFormDialog initial={pet} trigger={<button ref={editTriggerRef} type="button" className="hidden" aria-hidden />} />
         <div className="grid grid-cols-2 gap-2 mt-5">
           <PetFormDialog initial={pet} trigger={
             <Button variant="secondary" className="rounded-full h-10"><Pencil className="w-4 h-4 mr-1" />Bewerken</Button>
