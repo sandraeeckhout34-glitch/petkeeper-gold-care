@@ -225,12 +225,16 @@ export type Database = {
       }
       pets: {
         Row: {
+          allergies: string | null
           birth_date: string | null
           breed: string | null
+          chronic_conditions: string | null
           color: string | null
           created_at: string
           gender: string | null
           id: string
+          is_insured: boolean | null
+          is_neutered: boolean | null
           microchip_number: string | null
           name: string
           notes: string | null
@@ -239,15 +243,20 @@ export type Database = {
           species: string | null
           updated_at: string
           user_id: string
+          vet_name: string | null
           weight: number | null
         }
         Insert: {
+          allergies?: string | null
           birth_date?: string | null
           breed?: string | null
+          chronic_conditions?: string | null
           color?: string | null
           created_at?: string
           gender?: string | null
           id?: string
+          is_insured?: boolean | null
+          is_neutered?: boolean | null
           microchip_number?: string | null
           name: string
           notes?: string | null
@@ -256,15 +265,20 @@ export type Database = {
           species?: string | null
           updated_at?: string
           user_id: string
+          vet_name?: string | null
           weight?: number | null
         }
         Update: {
+          allergies?: string | null
           birth_date?: string | null
           breed?: string | null
+          chronic_conditions?: string | null
           color?: string | null
           created_at?: string
           gender?: string | null
           id?: string
+          is_insured?: boolean | null
+          is_neutered?: boolean | null
           microchip_number?: string | null
           name?: string
           notes?: string | null
@@ -273,6 +287,7 @@ export type Database = {
           species?: string | null
           updated_at?: string
           user_id?: string
+          vet_name?: string | null
           weight?: number | null
         }
         Relationships: []
