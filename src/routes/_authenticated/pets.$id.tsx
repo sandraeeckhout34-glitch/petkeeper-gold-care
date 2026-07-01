@@ -37,6 +37,7 @@ function PetDetail() {
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const editTriggerRef = useRef<HTMLButtonElement>(null);
+  const deleteInputRef = useRef<HTMLInputElement>(null);
 
   const { data: pet, isLoading } = useQuery({
     queryKey: ["pet", id],
@@ -114,10 +115,12 @@ function PetDetail() {
   const isArchived = status !== "active";
   const isDeleteConfirmed = deleteConfirm.trim().toUpperCase() === "DELETE";
   const handlePermanentDelete = async () => {
-    console.log("[PetKeeper] Permanent verwijderen knop geklikt", { petId: id, status, confirmed: isDeleteConfirmed });
+    const typedConfirmation = deleteInputRef.current?.value ?? deleteConfirm;
+    const confirmed = typedConfirmation.trim().toUpperCase() === "DELETE";
+    console.log("[PetKeeper] Permanent verwijderen knop geklikt", { petId: id, status, confirmed });
     setDeleteError(null);
 
-    if (!isDeleteConfirmed) {
+    if (!confirmed) {
       const message = "Typ DELETE om permanent verwijderen te bevestigen.";
       setDeleteError(message);
       toast.error(message);
@@ -278,7 +281,7 @@ function PetDetail() {
           <p className="text-sm text-muted-foreground">Dit verbergt het huisdier en alle gekoppelde gegevens overal in de app. Dit kan niet ongedaan worden gemaakt.</p>
           <div className="space-y-1.5">
             <Label className="text-xs uppercase tracking-wider text-muted-foreground">Typ <span className="font-mono text-destructive">DELETE</span> om te bevestigen</Label>
-            <Input value={deleteConfirm} onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError(null); }} className="rounded-xl h-11" placeholder="DELETE" />
+            <Input ref={deleteInputRef} value={deleteConfirm} onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError(null); }} className="rounded-xl h-11" placeholder="DELETE" />
           </div>
           {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
           <DialogFooter className="gap-2">
