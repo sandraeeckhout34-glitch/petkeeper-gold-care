@@ -149,7 +149,7 @@ function PetDetail() {
       toast.success("Huisdier permanent verwijderd");
       if (result.wasStatus === "deceased") navigate({ to: "/deceased-pets" });
       else if (result.wasStatus === "archived") navigate({ to: "/archived-pets" });
-      else navigate({ to: "/" });
+      else navigate({ to: "/home" });
     } catch (error: any) {
       console.error("[PetKeeper] Permanent verwijderen mislukt", error);
       const message = error?.message || "Permanent verwijderen is mislukt.";
@@ -303,7 +303,7 @@ function PetDetail() {
             <Button type="button" variant="secondary" disabled={del.isPending} onClick={() => setDeleteOpen(false)} className="rounded-full h-11 flex-1">Annuleren</Button>
             <Button
               type="button"
-              disabled={!isDeleteConfirmed || del.isPending}
+              disabled={del.isPending}
               onClick={handlePermanentDelete}
               className="rounded-full h-11 flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
@@ -364,6 +364,22 @@ function PetDetail() {
       </Tabs>
     </>
   );
+}
+
+function extractStoragePath(value?: string | null, bucket?: string): string | null {
+  if (!value) return null;
+  if (!value.startsWith("http")) return value;
+
+  try {
+    const url = new URL(value);
+    const decodedPath = decodeURIComponent(url.pathname);
+    const marker = bucket ? `/${bucket}/` : "/";
+    const markerIndex = decodedPath.indexOf(marker);
+    if (markerIndex === -1) return null;
+    return decodedPath.slice(markerIndex + marker.length);
+  } catch {
+    return null;
+  }
 }
 
 function InfoList({ pet }: { pet: any }) {
