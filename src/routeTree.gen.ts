@@ -14,6 +14,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRemindersRouteImport } from './routes/_authenticated/reminders'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedPetsIndexRouteImport } from './routes/_authenticated/pets.index'
@@ -43,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRemindersRoute = AuthenticatedRemindersRouteImport.update({
+  id: '/reminders',
+  path: '/reminders',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/reminders': typeof AuthenticatedRemindersRoute
   '/pets/$id': typeof AuthenticatedPetsIdRoute
   '/pets/': typeof AuthenticatedPetsIndexRoute
 }
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/reminders': typeof AuthenticatedRemindersRoute
   '/pets/$id': typeof AuthenticatedPetsIdRoute
   '/pets': typeof AuthenticatedPetsIndexRoute
 }
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/reminders': typeof AuthenticatedRemindersRoute
   '/_authenticated/pets/$id': typeof AuthenticatedPetsIdRoute
   '/_authenticated/pets/': typeof AuthenticatedPetsIndexRoute
 }
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/calendar'
     | '/home'
+    | '/reminders'
     | '/pets/$id'
     | '/pets/'
   fileRoutesByTo: FileRoutesByTo
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/calendar'
     | '/home'
+    | '/reminders'
     | '/pets/$id'
     | '/pets'
   id:
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/calendar'
     | '/_authenticated/home'
+    | '/_authenticated/reminders'
     | '/_authenticated/pets/$id'
     | '/_authenticated/pets/'
   fileRoutesById: FileRoutesById
@@ -175,6 +187,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/reminders': {
+      id: '/_authenticated/reminders'
+      path: '/reminders'
+      fullPath: '/reminders'
+      preLoaderRoute: typeof AuthenticatedRemindersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/home': {
       id: '/_authenticated/home'
       path: '/home'
@@ -209,6 +228,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedRemindersRoute: typeof AuthenticatedRemindersRoute
   AuthenticatedPetsIdRoute: typeof AuthenticatedPetsIdRoute
   AuthenticatedPetsIndexRoute: typeof AuthenticatedPetsIndexRoute
 }
@@ -216,6 +236,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedRemindersRoute: AuthenticatedRemindersRoute,
   AuthenticatedPetsIdRoute: AuthenticatedPetsIdRoute,
   AuthenticatedPetsIndexRoute: AuthenticatedPetsIndexRoute,
 }
