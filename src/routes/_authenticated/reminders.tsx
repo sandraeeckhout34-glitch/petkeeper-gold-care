@@ -1,24 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SubRecordDialog } from "@/lib/pet-forms";
+import { ConfirmDelete } from "@/components/confirm-delete";
 
 export const Route = createFileRoute("/_authenticated/reminders")({
-  head: () => ({ meta: [{ title: "Reminders — PetKeeper" }] }),
+  head: () => ({ meta: [{ title: "Herinneringen — PetKeeper" }] }),
   component: RemindersPage,
 });
 
 const fields = [
-  { key: "title", label: "Title", type: "text" as const },
-  { key: "category", label: "Category", type: "select" as const, options: ["Feeding", "Walk", "Grooming", "Medication", "Vet", "Other"] },
-  { key: "date", label: "Date", type: "date" as const },
-  { key: "time", label: "Time", type: "time" as const },
-  { key: "notes", label: "Notes", type: "textarea" as const },
+  { key: "title", label: "Titel", type: "text" as const },
+  { key: "category", label: "Categorie", type: "select" as const, options: ["Voeding", "Wandelen", "Trimmen", "Medicatie", "Dierenarts", "Anders"] },
+  { key: "date", label: "Datum", type: "date" as const },
+  { key: "time", label: "Tijd", type: "time" as const },
+  { key: "notes", label: "Notities", type: "textarea" as const },
 ];
 
 function RemindersPage() {
@@ -45,21 +46,21 @@ function RemindersPage() {
   });
   const del = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("reminders").delete().eq("id", id); if (error) throw error; },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["reminders"] }); toast.success("Removed"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["reminders"] }); toast.success("Verwijderd"); },
   });
 
   return (
     <>
       <PageHeader
-        subtitle="Never miss a beat"
-        title="Reminders"
+        subtitle="Mis nooit iets"
+        title="Herinneringen"
         action={
-          <SubRecordDialog table="reminders" petId={pets?.[0]?.id} title="New reminder" fields={fields}
+          <SubRecordDialog table="reminders" petId={pets?.[0]?.id} title="Nieuwe herinnering" fields={fields}
             trigger={<Button size="icon" className="rounded-full w-11 h-11 shadow-[var(--shadow-soft)]"><Plus className="w-5 h-5" /></Button>} />
         }
       />
       {!data || data.length === 0 ? (
-        <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] py-10 text-center text-sm text-muted-foreground">No reminders yet</div>
+        <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] py-10 text-center text-sm text-muted-foreground">Nog geen herinneringen</div>
       ) : (
         <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] divide-y divide-border overflow-hidden">
           {data.map((r) => (
@@ -68,14 +69,12 @@ function RemindersPage() {
               <div className="flex-1 min-w-0">
                 <div className={`text-sm font-medium truncate ${r.completed ? "line-through text-muted-foreground" : ""}`}>{r.title}</div>
                 <div className="text-xs text-muted-foreground truncate">
-                  {[r.category, r.date, r.time, (r as any).pets?.name].filter(Boolean).join(" • ")}
+                  {[r.category, r.date, (r.time ?? "").slice(0,5), (r as any).pets?.name].filter(Boolean).join(" • ")}
                 </div>
               </div>
-              <SubRecordDialog table="reminders" petId={r.pet_id} title="Edit reminder" fields={fields} initial={r}
+              <SubRecordDialog table="reminders" petId={r.pet_id} title="Herinnering bewerken" fields={fields} initial={r}
                 trigger={<Button variant="ghost" size="icon" className="rounded-full h-8 w-8"><Pencil className="w-4 h-4" /></Button>} />
-              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 text-destructive" onClick={() => del.mutate(r.id)}>
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              <ConfirmDelete onConfirm={() => del.mutate(r.id)} title="Herinnering verwijderen?" />
             </div>
           ))}
         </div>
