@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ConfirmDelete } from "@/components/confirm-delete";
 
 export const Route = createFileRoute("/_authenticated/pets/$id")({
   head: () => ({ meta: [{ title: "Huisdier — PetKeeper" }] }),
@@ -376,7 +377,7 @@ function SubList({
       const { error } = await supabase.from(table).delete().eq("id", rowId);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: [table, petId] }); toast.success("Removed"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: [table, petId] }); toast.success("Verwijderd"); },
   });
 
   return (
@@ -401,9 +402,7 @@ function SubList({
                 <SubRecordDialog table={table} petId={petId} title={`Bewerken`} fields={fields} initial={r}
                   trigger={<Button variant="ghost" size="icon" className="rounded-full h-8 w-8"><Pencil className="w-4 h-4" /></Button>}
                 />
-                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 text-destructive" onClick={() => del.mutate(r.id)}>
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                <ConfirmDelete onConfirm={() => del.mutate(r.id)} />
               </div>
             </div>
           ))}
@@ -430,7 +429,7 @@ function DocsList({ petId }: { petId: string }) {
       const { error } = await supabase.from("documents").delete().eq("id", row.id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["documents", petId] }); toast.success("Removed"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["documents", petId] }); toast.success("Verwijderd"); },
   });
 
   async function openDoc(row: any) {
@@ -455,9 +454,7 @@ function DocsList({ petId }: { petId: string }) {
                 <div className="text-sm font-medium truncate">{r.title}</div>
                 <div className="text-xs text-muted-foreground truncate">{r.date || ""} {r.notes ? `• ${r.notes}` : ""}</div>
               </button>
-              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 text-destructive" onClick={() => del.mutate(r)}>
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              <ConfirmDelete onConfirm={() => del.mutate(r)} title="Document verwijderen?" />
             </div>
           ))}
         </div>
