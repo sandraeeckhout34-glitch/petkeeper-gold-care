@@ -25,7 +25,7 @@ function RemindersPage() {
   const qc = useQueryClient();
   const { data: pets } = useQuery({
     queryKey: ["pets"],
-    queryFn: async () => (await supabase.from("pets").select("id,name")).data ?? [],
+    queryFn: async () => (await supabase.from("pets").select("id,name").eq("status","active")).data ?? [],
   });
   const { data } = useQuery({
     queryKey: ["reminders"],

@@ -231,16 +231,19 @@ export type Database = {
           chronic_conditions: string | null
           color: string | null
           created_at: string
+          deceased_date: string | null
           gender: string | null
           id: string
           is_insured: boolean | null
           is_neutered: boolean | null
+          memorial_note: string | null
           microchip_number: string | null
           name: string
           notes: string | null
           passport_number: string | null
           photo_url: string | null
           species: string | null
+          status: string
           updated_at: string
           user_id: string
           vet_name: string | null
@@ -253,16 +256,19 @@ export type Database = {
           chronic_conditions?: string | null
           color?: string | null
           created_at?: string
+          deceased_date?: string | null
           gender?: string | null
           id?: string
           is_insured?: boolean | null
           is_neutered?: boolean | null
+          memorial_note?: string | null
           microchip_number?: string | null
           name: string
           notes?: string | null
           passport_number?: string | null
           photo_url?: string | null
           species?: string | null
+          status?: string
           updated_at?: string
           user_id: string
           vet_name?: string | null
@@ -275,16 +281,19 @@ export type Database = {
           chronic_conditions?: string | null
           color?: string | null
           created_at?: string
+          deceased_date?: string | null
           gender?: string | null
           id?: string
           is_insured?: boolean | null
           is_neutered?: boolean | null
+          memorial_note?: string | null
           microchip_number?: string | null
           name?: string
           notes?: string | null
           passport_number?: string | null
           photo_url?: string | null
           species?: string | null
+          status?: string
           updated_at?: string
           user_id?: string
           vet_name?: string | null

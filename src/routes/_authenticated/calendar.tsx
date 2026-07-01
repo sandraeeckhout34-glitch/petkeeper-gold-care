@@ -30,7 +30,7 @@ function CalendarPage() {
   const pets = useQuery({
     queryKey: ["pets"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("pets").select("id, name").order("name");
+      const { data, error } = await supabase.from("pets").select("id, name").eq("status","active").order("name");
       if (error) throw error;
       return data ?? [];
     },
