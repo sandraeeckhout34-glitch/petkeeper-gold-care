@@ -3,12 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { PawPrint, CalendarDays, Pill, Syringe, FileText, Wallet, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
+import { nl } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import {
   PetFormDialog, SubRecordDialog, type SubFieldDef,
-  medicationFields, vaccinationFields, documentFields, expenseFields,
+  medicationFields, vaccinationFields, documentFields, expenseFields, formatTime,
 } from "@/lib/pet-forms";
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -18,18 +19,29 @@ export const Route = createFileRoute("/_authenticated/home")({
 
 const appointmentFields: SubFieldDef[] = [
   {
-    key: "title", label: "Appointment Type", type: "select-other",
-    options: ["Veterinary Check-up", "Vaccination", "Grooming", "Dental Care", "Blood Test",
-      "Medication Follow-up", "Deworming", "Flea & Tick Treatment", "Weight Check", "Surgery",
-      "Emergency", "Other"],
-    otherKey: "custom_title", otherLabel: "Custom Appointment Title",
-    otherPlaceholder: "Enter a title",
+    key: "title", label: "Type afspraak", type: "select-other",
+    options: [
+      { value: "Veterinary Check-up", label: "🩺 Dierenartscontrole" },
+      { value: "Vaccination", label: "💉 Vaccinatie" },
+      { value: "Grooming", label: "✂️ Trimmen" },
+      { value: "Dental Care", label: "🪥 Gebitsverzorging" },
+      { value: "Blood Test", label: "🧪 Bloedonderzoek" },
+      { value: "Medication Follow-up", label: "💊 Medicatiecontrole" },
+      { value: "Deworming", label: "🐛 Ontwormen" },
+      { value: "Flea & Tick Treatment", label: "🦟 Vlooien & Teken" },
+      { value: "Weight Check", label: "⚖️ Gewichtscontrole" },
+      { value: "Surgery", label: "🏥 Operatie" },
+      { value: "Emergency", label: "🚑 Spoed" },
+      { value: "Other", label: "📋 Anders" },
+    ],
+    otherKey: "custom_title", otherLabel: "Eigen titel afspraak",
+    otherPlaceholder: "Voer titel in",
   },
-  { key: "date", label: "Date", type: "date" },
-  { key: "time", label: "Time", type: "time" },
-  { key: "location", label: "Location", type: "text" },
-  { key: "provider", label: "Veterinarian / Groomer", type: "text" },
-  { key: "notes", label: "Notes", type: "textarea" },
+  { key: "date", label: "Datum", type: "date" },
+  { key: "time", label: "Tijd", type: "time" },
+  { key: "location", label: "Locatie", type: "text" },
+  { key: "provider", label: "Dierenarts / Trimmer", type: "text" },
+  { key: "notes", label: "Notities", type: "textarea" },
 ];
 
 function HomePage() {
@@ -88,32 +100,32 @@ function HomePage() {
 
   const firstName = (profile.data?.full_name || "").split(" ")[0];
   const monthTotal = (expenses.data ?? []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-  const currency = (expenses.data?.[0] as any)?.currency ?? "USD";
-  const fmt = (n: number) => new Intl.NumberFormat(undefined, { style: "currency", currency }).format(n);
+  const currency = (expenses.data?.[0] as any)?.currency ?? "EUR";
+  const fmt = (n: number) => new Intl.NumberFormat("nl-NL", { style: "currency", currency }).format(n);
 
   const petList = pets.data ?? [];
 
   return (
     <>
       <PageHeader
-        subtitle={format(new Date(), "EEEE, MMM d")}
-        title={firstName ? `Welcome, ${firstName}` : "Welcome"}
+        subtitle={format(new Date(), "EEEE d MMMM", { locale: nl })}
+        title={firstName ? `Welkom terug, ${firstName}` : "Welkom terug"}
       />
 
       {/* Quick actions */}
       <section className="mb-8">
         <div className="grid grid-cols-3 gap-2">
-          <PetFormDialog trigger={<QAction icon={PawPrint} label="Add Pet" />} />
-          <QuickAdd pets={petList} icon={CalendarDays} label="Add Visit" table="appointments" fields={appointmentFields} />
-          <QuickAdd pets={petList} icon={Pill} label="Add Med" table="medications" fields={medicationFields} />
-          <QuickAdd pets={petList} icon={Syringe} label="Add Vacc" table="vaccinations" fields={vaccinationFields} />
-          <QuickAdd pets={petList} icon={FileText} label="Upload Doc" table="documents" fields={documentFields} />
-          <QuickAdd pets={petList} icon={Wallet} label="Add Cost" table="expenses" fields={expenseFields} />
+          <PetFormDialog trigger={<QAction icon={PawPrint} label="Huisdier" />} />
+          <QuickAdd pets={petList} icon={CalendarDays} label="Afspraak" table="appointments" fields={appointmentFields} />
+          <QuickAdd pets={petList} icon={Pill} label="Medicatie" table="medications" fields={medicationFields} />
+          <QuickAdd pets={petList} icon={Syringe} label="Vaccinatie" table="vaccinations" fields={vaccinationFields} />
+          <QuickAdd pets={petList} icon={FileText} label="Document" table="documents" fields={documentFields} />
+          <QuickAdd pets={petList} icon={Wallet} label="Kosten" table="expenses" fields={expenseFields} />
         </div>
       </section>
 
       {/* My Pets */}
-      <SectionHeader title="My Pets" to="/pets" />
+      <SectionHeader title="Mijn Huisdieren" to="/pets" />
       {petList.length > 0 ? (
         <div className="flex gap-3 overflow-x-auto -mx-5 px-5 pb-2 mb-8 scroll-smooth">
           {petList.map((p) => (
@@ -125,28 +137,28 @@ function HomePage() {
           ))}
         </div>
       ) : (
-        <EmptyCard message="Add your first pet to begin" cta={<PetFormDialog trigger={<Button size="sm" className="rounded-full">Add pet</Button>} />} />
+        <EmptyCard message="Voeg je eerste huisdier toe om te beginnen" cta={<PetFormDialog trigger={<Button size="sm" className="rounded-full">Huisdier toevoegen</Button>} />} />
       )}
 
-      <SectionHeader title="Today's Appointments" to="/calendar" />
+      <SectionHeader title="Afspraken Vandaag" to="/calendar" />
       <ListCard items={appts.data ?? []} render={(a) => (
-        <Row primary={a.title} secondary={`${a.pets?.name ?? ""} • ${a.time ?? ""}`} />
-      )} empty="No appointments today" />
+        <Row primary={a.title} secondary={`${a.pets?.name ?? ""} • ${formatTime(a.time)}`} />
+      )} empty="Geen afspraken vandaag" />
 
-      <SectionHeader title="Today's Medication" />
+      <SectionHeader title="Medicatie Vandaag" />
       <ListCard items={meds.data ?? []} render={(m) => (
         <Row primary={m.name} secondary={`${m.pets?.name ?? ""} • ${m.dosage ?? ""} ${m.frequency ?? ""}`} />
-      )} empty="No medication scheduled" />
+      )} empty="Geen medicatie gepland" />
 
-      <SectionHeader title="Upcoming Vaccinations" />
+      <SectionHeader title="Vaccinaties Binnenkort" />
       <ListCard items={vacs.data ?? []} render={(v) => (
-        <Row primary={v.vaccine} secondary={`${v.pets?.name ?? ""} • Due ${v.next_due_date}`} />
-      )} empty="Nothing due in 30 days" />
+        <Row primary={v.vaccine} secondary={`${v.pets?.name ?? ""} • Op ${v.next_due_date ?? ""}`} />
+      )} empty="Niets binnen 30 dagen" />
 
-      <SectionHeader title="Expenses this month" to="/expenses" />
+      <SectionHeader title="Kosten Deze Maand" to="/expenses" />
       <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] px-5 py-5 mb-8 flex items-center justify-between">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">{format(new Date(), "MMMM yyyy")}</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">{format(new Date(), "MMMM yyyy", { locale: nl })}</div>
           <div className="font-display text-2xl">{fmt(monthTotal)}</div>
         </div>
         <Wallet className="w-6 h-6 text-primary" strokeWidth={1.5} />
