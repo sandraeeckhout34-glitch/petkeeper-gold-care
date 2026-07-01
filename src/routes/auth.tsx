@@ -15,7 +15,7 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Sign in — PetKeeper" }] }),
+  head: () => ({ meta: [{ title: "Inloggen — PetKeeper" }] }),
   component: AuthPage,
 });
 
@@ -45,7 +45,7 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("Welcome to PetKeeper");
+        toast.success("Welkom bij PetKeeper");
         navigate({ to: "/home" });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -53,7 +53,7 @@ function AuthPage() {
         navigate({ to: "/home" });
       }
     } catch (err: any) {
-      toast.error(err?.message || "Something went wrong");
+      toast.error(err?.message || "Er ging iets mis");
     } finally {
       setSubmitting(false);
     }
@@ -64,7 +64,7 @@ function AuthPage() {
   return (
     <div className="min-h-screen bg-background px-6 pt-8 pb-12">
       <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground text-sm mb-8">
-        <ArrowLeft className="w-4 h-4" /> Back
+        <ArrowLeft className="w-4 h-4" /> Terug
       </Link>
       <div className="max-w-md mx-auto">
         <div className="flex items-center gap-3 mb-8">
@@ -74,7 +74,7 @@ function AuthPage() {
           <div>
             <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">PetKeeper</div>
             <h1 className="text-3xl font-display font-medium">
-              {isRegister ? "Create account" : "Welcome back"}
+              {isRegister ? "Account aanmaken" : "Welkom terug"}
             </h1>
           </div>
         </div>
@@ -82,34 +82,34 @@ function AuthPage() {
         <form onSubmit={handleSubmit} className="space-y-4 bg-card rounded-3xl p-6 shadow-[var(--shadow-soft)]">
           {isRegister && (
             <div className="space-y-2">
-              <Label>Full name</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Jane Doe" className="h-12 rounded-xl" />
+              <Label>Volledige naam</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Sandra de Vries" className="h-12 rounded-xl" />
             </div>
           )}
           <div className="space-y-2">
-            <Label>Email</Label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" className="h-12 rounded-xl" />
+            <Label>E-mail</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="jij@voorbeeld.nl" className="h-12 rounded-xl" />
           </div>
           <div className="space-y-2">
-            <Label>Password</Label>
+            <Label>Wachtwoord</Label>
             <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} placeholder="••••••••" className="h-12 rounded-xl" />
           </div>
           <Button type="submit" disabled={submitting} size="lg" className="w-full h-13 rounded-full">
-            {submitting ? "Please wait…" : isRegister ? "Create account" : "Sign in"}
+            {submitting ? "Even geduld…" : isRegister ? "Account aanmaken" : "Inloggen"}
           </Button>
         </form>
 
         <div className="mt-6 text-center text-sm text-muted-foreground space-y-3">
           {isRegister ? (
-            <p>Already have an account?{" "}
-              <Link to="/auth" search={{ mode: "login" }} className="text-foreground font-medium">Sign in</Link>
+            <p>Heb je al een account?{" "}
+              <Link to="/auth" search={{ mode: "login" }} className="text-foreground font-medium">Inloggen</Link>
             </p>
           ) : (
             <>
-              <p>New to PetKeeper?{" "}
-                <Link to="/auth" search={{ mode: "register" }} className="text-foreground font-medium">Create an account</Link>
+              <p>Nieuw bij PetKeeper?{" "}
+                <Link to="/auth" search={{ mode: "register" }} className="text-foreground font-medium">Maak een account</Link>
               </p>
-              <p><Link to="/forgot-password" className="text-foreground">Forgot password?</Link></p>
+              <p><Link to="/forgot-password" className="text-foreground">Wachtwoord vergeten?</Link></p>
             </>
           )}
         </div>
