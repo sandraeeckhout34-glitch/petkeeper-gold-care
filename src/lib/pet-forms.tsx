@@ -230,12 +230,13 @@ export function SubRecordDialog({
             payload[f.key] = null;
           }
         } else if (f.type === "select-other") {
-          payload[f.key] = v || null;
           const custom = values[f.otherKey];
           if (v === "Other" && (!custom || !String(custom).trim())) {
             throw new Error(`Please enter ${f.otherLabel}`);
           }
-          payload[f.otherKey] = v === "Other" ? String(custom).trim() : null;
+          // Store the custom text into the primary column when "Other" is
+          // chosen — avoids needing an extra custom_* column per table.
+          payload[f.key] = v === "Other" ? String(custom).trim() : (v || null);
         } else if (v === "" || v === undefined || v === null) {
           payload[f.key] = null;
         } else if (f.type === "number") {
