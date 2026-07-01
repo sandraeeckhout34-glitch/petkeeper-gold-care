@@ -20,22 +20,22 @@ function SettingsPage() {
   const navigate = useNavigate();
   async function logout() {
     await supabase.auth.signOut();
-    toast.success("Signed out");
+    toast.success("Uitgelogd");
     navigate({ to: "/" });
   }
   return (
     <>
-      <PageHeader subtitle="Account & preferences" title="Settings" />
+      <PageHeader subtitle="Account & voorkeuren" title="Instellingen" />
       <ProfileCard />
       <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] divide-y divide-border overflow-hidden mb-6">
         <NotificationsRow />
-        <TextDialogRow icon={Shield} title="Privacy Policy" body={PRIVACY} />
-        <TextDialogRow icon={FileText} title="Terms of Service" body={TERMS} />
+        <TextDialogRow icon={Shield} title="Privacybeleid" body={PRIVACY} />
+        <TextDialogRow icon={FileText} title="Algemene voorwaarden" body={TERMS} />
         <TextDialogRow icon={Mail} title="Contact" body={CONTACT} />
-        <TextDialogRow icon={Info} title="About PetKeeper" body={ABOUT} />
+        <TextDialogRow icon={Info} title="Over PetKeeper" body={ABOUT} />
       </div>
       <Button onClick={logout} variant="secondary" className="w-full h-12 rounded-full text-destructive">
-        <LogOut className="w-4 h-4 mr-2" /> Sign out
+        <LogOut className="w-4 h-4 mr-2" /> Uitloggen
       </Button>
     </>
   );
@@ -69,15 +69,15 @@ function ProfileCard() {
           <User className="w-5 h-5 text-primary-foreground" strokeWidth={1.75} />
         </div>
         <div className="min-w-0">
-          <div className="font-medium truncate">{profile?.full_name || "Your profile"}</div>
+          <div className="font-medium truncate">{profile?.full_name || "Jouw profiel"}</div>
           <div className="text-xs text-muted-foreground truncate">{profile?.email}</div>
         </div>
       </div>
       <div className="space-y-2">
-        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Full name</Label>
+        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Volledige naam</Label>
         <Input value={name} onChange={(e) => setName(e.target.value)} className="rounded-xl h-11" />
         <Button onClick={() => save.mutate()} disabled={save.isPending} size="sm" className="w-full rounded-full h-10 mt-1">
-          {save.isPending ? "Saving…" : "Save"}
+          {save.isPending ? "Opslaan…" : "Opslaan"}
         </Button>
       </div>
     </div>
@@ -94,8 +94,8 @@ function NotificationsRow() {
     <div className="px-5 py-4 flex items-center gap-3">
       <Bell className="w-5 h-5 text-primary" strokeWidth={1.75} />
       <div className="flex-1">
-        <div className="text-sm font-medium">Notifications</div>
-        <div className="text-xs text-muted-foreground">Reminder alerts</div>
+        <div className="text-sm font-medium">Meldingen</div>
+        <div className="text-xs text-muted-foreground">Herinneringen</div>
       </div>
       <Switch checked={on} onCheckedChange={setOn} />
     </div>
