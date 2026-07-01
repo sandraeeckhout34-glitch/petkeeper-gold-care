@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, PawPrint, Archive, Heart } from "lucide-react";
+import { ArrowLeft, PawPrint, Archive } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/archived-pets")({
@@ -10,20 +10,17 @@ export const Route = createFileRoute("/_authenticated/archived-pets")({
 
 function ArchivedPetsPage() {
   const { data } = useQuery({
-    queryKey: ["pets", "archived"],
+    queryKey: ["pets", "archived-only"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("pets")
         .select("*")
-        .in("status", ["archived", "deceased"])
+        .eq("status", "archived")
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
   });
-
-  const deceased = (data ?? []).filter((p: any) => p.status === "deceased");
-  const archived = (data ?? []).filter((p: any) => p.status === "archived");
 
   return (
     <>
@@ -31,9 +28,7 @@ function ArchivedPetsPage() {
         <ArrowLeft className="w-4 h-4" /> Instellingen
       </Link>
       <h1 className="text-3xl font-display font-medium mb-6">Gearchiveerde huisdieren</h1>
-
-      <Section title="In herinnering" icon={Heart} items={deceased} empty="Geen huisdieren in herinnering" />
-      <Section title="Gearchiveerd" icon={Archive} items={archived} empty="Geen gearchiveerde huisdieren" />
+      <Section title="Gearchiveerd" icon={Archive} items={data ?? []} empty="Geen gearchiveerde huisdieren" />
     </>
   );
 }

@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { User, Bell, Shield, FileText, Mail, Info, LogOut, ChevronRight, Archive } from "lucide-react";
+import { User, Bell, Shield, FileText, Mail, Info, LogOut, ChevronRight, Archive, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,11 @@ function SettingsPage() {
         <Link to="/archived-pets" className="w-full px-5 py-4 flex items-center gap-3 text-left hover:bg-secondary/40 transition">
           <Archive className="w-5 h-5 text-primary" strokeWidth={1.75} />
           <div className="flex-1 text-sm font-medium">Gearchiveerde huisdieren</div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </Link>
+        <Link to="/deceased-pets" className="w-full px-5 py-4 flex items-center gap-3 text-left hover:bg-secondary/40 transition">
+          <Heart className="w-5 h-5 text-primary" strokeWidth={1.75} />
+          <div className="flex-1 text-sm font-medium">Overleden huisdieren</div>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </Link>
         <TextDialogRow icon={Shield} title="Privacybeleid" body={PRIVACY} />

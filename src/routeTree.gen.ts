@@ -18,6 +18,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedRemindersRouteImport } from './routes/_authenticated/reminders'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
+import { Route as AuthenticatedDeceasedPetsRouteImport } from './routes/_authenticated/deceased-pets'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedArchivedPetsRouteImport } from './routes/_authenticated/archived-pets'
 import { Route as AuthenticatedPetsIndexRouteImport } from './routes/_authenticated/pets.index'
@@ -67,6 +68,12 @@ const AuthenticatedExpensesRoute = AuthenticatedExpensesRouteImport.update({
   path: '/expenses',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDeceasedPetsRoute =
+  AuthenticatedDeceasedPetsRouteImport.update({
+    id: '/deceased-pets',
+    path: '/deceased-pets',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -96,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/archived-pets': typeof AuthenticatedArchivedPetsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
+  '/deceased-pets': typeof AuthenticatedDeceasedPetsRoute
   '/expenses': typeof AuthenticatedExpensesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/reminders': typeof AuthenticatedRemindersRoute
@@ -110,6 +118,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/archived-pets': typeof AuthenticatedArchivedPetsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
+  '/deceased-pets': typeof AuthenticatedDeceasedPetsRoute
   '/expenses': typeof AuthenticatedExpensesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/reminders': typeof AuthenticatedRemindersRoute
@@ -126,6 +135,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/archived-pets': typeof AuthenticatedArchivedPetsRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
+  '/_authenticated/deceased-pets': typeof AuthenticatedDeceasedPetsRoute
   '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/reminders': typeof AuthenticatedRemindersRoute
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/archived-pets'
     | '/calendar'
+    | '/deceased-pets'
     | '/expenses'
     | '/home'
     | '/reminders'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/archived-pets'
     | '/calendar'
+    | '/deceased-pets'
     | '/expenses'
     | '/home'
     | '/reminders'
@@ -171,6 +183,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/archived-pets'
     | '/_authenticated/calendar'
+    | '/_authenticated/deceased-pets'
     | '/_authenticated/expenses'
     | '/_authenticated/home'
     | '/_authenticated/reminders'
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedExpensesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/deceased-pets': {
+      id: '/_authenticated/deceased-pets'
+      path: '/deceased-pets'
+      fullPath: '/deceased-pets'
+      preLoaderRoute: typeof AuthenticatedDeceasedPetsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/calendar': {
       id: '/_authenticated/calendar'
       path: '/calendar'
@@ -286,6 +306,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedArchivedPetsRoute: typeof AuthenticatedArchivedPetsRoute
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
+  AuthenticatedDeceasedPetsRoute: typeof AuthenticatedDeceasedPetsRoute
   AuthenticatedExpensesRoute: typeof AuthenticatedExpensesRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedRemindersRoute: typeof AuthenticatedRemindersRoute
@@ -297,6 +318,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedArchivedPetsRoute: AuthenticatedArchivedPetsRoute,
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
+  AuthenticatedDeceasedPetsRoute: AuthenticatedDeceasedPetsRoute,
   AuthenticatedExpensesRoute: AuthenticatedExpensesRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedRemindersRoute: AuthenticatedRemindersRoute,
