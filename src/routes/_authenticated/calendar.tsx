@@ -30,7 +30,7 @@ function CalendarPage() {
   const pets = useQuery({
     queryKey: ["pets"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("pets").select("id, name").eq("status","active").order("name");
+      const { data, error } = await supabase.from("pets").select("id, name").eq("status","active").is("deleted_at", null).order("name");
       if (error) throw error;
       return data ?? [];
     },
@@ -41,16 +41,17 @@ function CalendarPage() {
     enabled: !!day,
     queryFn: async () => {
       const [a, r, m, v] = await Promise.all([
-        supabase.from("appointments").select("*, pets(name)").eq("date", day).order("time"),
-        supabase.from("reminders").select("*, pets(name)").eq("date", day),
-        supabase.from("medications").select("*, pets(name)").lte("start_date", day).or(`end_date.is.null,end_date.gte.${day}`),
-        supabase.from("vaccinations").select("*, pets(name)").eq("next_due_date", day),
+        supabase.from("appointments").select("*, pets(name,status,deleted_at)").eq("date", day).order("time"),
+        supabase.from("reminders").select("*, pets(name,status,deleted_at)").eq("date", day),
+        supabase.from("medications").select("*, pets(name,status,deleted_at)").lte("start_date", day).or(`end_date.is.null,end_date.gte.${day}`),
+        supabase.from("vaccinations").select("*, pets(name,status,deleted_at)").eq("next_due_date", day),
       ]);
+      const visible = (rows: any[] | null) => (rows ?? []).filter(isVisiblePetRecord);
       return {
-        appointments: a.data ?? [],
-        reminders: r.data ?? [],
-        medications: m.data ?? [],
-        vaccinations: v.data ?? [],
+        appointments: visible(a.data),
+        reminders: visible(r.data),
+        medications: visible(m.data),
+        vaccinations: visible(v.data),
       };
     },
   });
@@ -79,6 +80,10 @@ function CalendarPage() {
       <Section icon={Bell} title="Herinneringen" items={events?.reminders ?? []} empty="Geen herinneringen" render={(r: any) => `${r.title} • ${(r.time ?? "").slice(0,5)}`} />
     </>
   );
+}
+
+function isVisiblePetRecord(row: any) {
+  return !row.pet_id || (!!row.pets && row.pets.status !== "deleted" && !row.pets.deleted_at);
 }
 
 function Section({ icon: Icon, title, items, render, empty }: any) {

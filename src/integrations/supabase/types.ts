@@ -232,6 +232,7 @@ export type Database = {
           color: string | null
           created_at: string
           deceased_date: string | null
+          deleted_at: string | null
           gender: string | null
           id: string
           is_insured: boolean | null
@@ -257,6 +258,7 @@ export type Database = {
           color?: string | null
           created_at?: string
           deceased_date?: string | null
+          deleted_at?: string | null
           gender?: string | null
           id?: string
           is_insured?: boolean | null
@@ -282,6 +284,7 @@ export type Database = {
           color?: string | null
           created_at?: string
           deceased_date?: string | null
+          deleted_at?: string | null
           gender?: string | null
           id?: string
           is_insured?: boolean | null

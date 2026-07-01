@@ -16,6 +16,7 @@ function ArchivedPetsPage() {
         .from("pets")
         .select("*")
         .eq("status", "archived")
+        .is("deleted_at", null)
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return data ?? [];

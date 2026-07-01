@@ -26,14 +26,14 @@ function RemindersPage() {
   const qc = useQueryClient();
   const { data: pets } = useQuery({
     queryKey: ["pets"],
-    queryFn: async () => (await supabase.from("pets").select("id,name").eq("status","active")).data ?? [],
+    queryFn: async () => (await supabase.from("pets").select("id,name").eq("status","active").is("deleted_at", null)).data ?? [],
   });
   const { data } = useQuery({
     queryKey: ["reminders"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("reminders").select("*, pets(name)").order("date", { ascending: true }).order("time", { ascending: true });
+      const { data, error } = await supabase.from("reminders").select("*, pets(name,status,deleted_at)").order("date", { ascending: true }).order("time", { ascending: true });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []).filter((row: any) => !row.pet_id || (!!row.pets && row.pets.status !== "deleted" && !row.pets.deleted_at));
     },
   });
 

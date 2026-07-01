@@ -16,6 +16,7 @@ function DeceasedPetsPage() {
         .from("pets")
         .select("*")
         .eq("status", "deceased")
+        .is("deleted_at", null)
         .order("deceased_date", { ascending: false });
       if (error) throw error;
       return data ?? [];

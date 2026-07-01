@@ -18,18 +18,18 @@ function ExpensesPage() {
   const qc = useQueryClient();
   const { data: pets } = useQuery({
     queryKey: ["pets"],
-    queryFn: async () => (await supabase.from("pets").select("id,name").eq("status","active").order("name")).data ?? [],
+    queryFn: async () => (await supabase.from("pets").select("id,name").eq("status","active").is("deleted_at", null).order("name")).data ?? [],
   });
   const { data } = useQuery({
     queryKey: ["expenses"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("expenses")
-        .select("*, pets(name)")
+        .select("*, pets(name,status,deleted_at)")
         .order("date", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []).filter((row: any) => !row.pet_id || (!!row.pets && row.pets.status !== "deleted" && !row.pets.deleted_at));
     },
   });
 
