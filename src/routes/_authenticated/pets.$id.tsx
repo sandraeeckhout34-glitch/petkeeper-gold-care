@@ -114,7 +114,6 @@ function PetDetail() {
 
   const status = (pet as any).status ?? "active";
   const isArchived = status !== "active";
-  const isDeleteConfirmed = deleteConfirm.trim().toUpperCase() === "DELETE";
   const isDeleteBusy = del.isPending || deleteSubmitting;
   const handlePermanentDelete = async (form?: HTMLFormElement | null) => {
     if (isDeleteBusy) return;
