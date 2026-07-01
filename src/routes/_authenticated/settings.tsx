@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/settings")({
-  head: () => ({ meta: [{ title: "Settings — PetKeeper" }] }),
+  head: () => ({ meta: [{ title: "Instellingen — PetKeeper" }] }),
   component: SettingsPage,
 });
 
@@ -64,7 +64,7 @@ function ProfileCard() {
       const { error } = await supabase.from("profiles").upsert({ id: u.user!.id, full_name: name });
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["profile"] }); toast.success("Profile updated"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["profile"] }); toast.success("Profiel bijgewerkt"); },
     onError: (e: any) => toast.error(e.message),
   });
   return (
@@ -126,26 +126,26 @@ function TextDialogRow({ icon: Icon, title, body }: { icon: any; title: string; 
   );
 }
 
-const PRIVACY = `PetKeeper is committed to protecting your privacy. Your pet data is stored securely and is only accessible to you.
+const PRIVACY = `PetKeeper hecht veel waarde aan jouw privacy. Jouw huisdiergegevens worden veilig opgeslagen en zijn alleen toegankelijk voor jou.
 
-We do not sell, trade, or share your personal information with third parties. Photos, documents, and records you add remain private to your account.
+Wij verkopen, verhandelen of delen jouw persoonlijke informatie niet met derden. Foto's, documenten en records die je toevoegt blijven privé binnen jouw account.
 
-You may delete your account and all associated data at any time by contacting support.`;
+Je kunt jouw account en alle bijbehorende gegevens op elk moment verwijderen door contact op te nemen met support.`;
 
-const TERMS = `By using PetKeeper you agree to use the service responsibly and for lawful purposes only.
+const TERMS = `Door PetKeeper te gebruiken ga je akkoord om de dienst verantwoord en uitsluitend voor rechtmatige doeleinden te gebruiken.
 
-PetKeeper is a personal record-keeping tool. It is not a substitute for professional veterinary care. Always consult a qualified veterinarian for medical decisions.
+PetKeeper is een persoonlijk administratie-hulpmiddel. Het is geen vervanging voor professionele diergeneeskundige zorg. Raadpleeg altijd een gekwalificeerde dierenarts voor medische beslissingen.
 
-We reserve the right to update these terms; continued use of the app constitutes acceptance.`;
+Wij behouden ons het recht voor deze voorwaarden bij te werken; voortgezet gebruik van de app betekent aanvaarding daarvan.`;
 
-const CONTACT = `Need help or have feedback?
+const CONTACT = `Hulp nodig of feedback?
 
-Email: support@petkeeper.app
+E-mail: support@petkeeper.app
 
-We aim to respond within two business days.`;
+We streven ernaar binnen twee werkdagen te reageren.`;
 
-const ABOUT = `PetKeeper is a beautifully crafted mobile companion for pet owners who care deeply.
+const ABOUT = `PetKeeper is een zorgvuldig ontworpen metgezel voor huisdiereigenaren die er echt om geven.
 
-Version 1.0
+Versie 1.0
 
-Designed with warmth, built with care.`;
+Ontworpen met warmte, gebouwd met zorg.`;
