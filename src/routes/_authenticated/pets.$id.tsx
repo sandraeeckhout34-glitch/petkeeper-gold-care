@@ -266,7 +266,7 @@ function PetDetail() {
           <DialogFooter className="gap-2">
             <Button variant="secondary" onClick={() => setDeleteOpen(false)} className="rounded-full h-11 flex-1">Annuleren</Button>
             <Button
-              disabled={deleteConfirm !== "DELETE" || del.isPending}
+              disabled={deleteConfirm.trim().toUpperCase() !== "DELETE" || del.isPending}
               onClick={() => del.mutate()}
               className="rounded-full h-11 flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
