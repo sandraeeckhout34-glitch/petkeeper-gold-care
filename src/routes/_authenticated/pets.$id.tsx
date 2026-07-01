@@ -58,11 +58,14 @@ function PetDetail() {
       }
       const { error } = await supabase.from("pets").delete().eq("id", id);
       if (error) throw error;
+      return { wasStatus: (pet as any)?.status ?? "active" };
     },
-    onSuccess: () => {
+    onSuccess: (res) => {
       qc.invalidateQueries();
-      toast.success("Huisdier permanent verwijderd");
-      navigate({ to: "/pets" });
+      toast.success("Huisdier permanent verwijderd.");
+      if (res?.wasStatus === "deceased") navigate({ to: "/deceased-pets" });
+      else if (res?.wasStatus === "archived") navigate({ to: "/archived-pets" });
+      else navigate({ to: "/pets" });
     },
     onError: (e: any) => toast.error(e.message),
   });
