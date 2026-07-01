@@ -18,7 +18,7 @@ function ExpensesPage() {
   const qc = useQueryClient();
   const { data: pets } = useQuery({
     queryKey: ["pets"],
-    queryFn: async () => (await supabase.from("pets").select("id,name").order("name")).data ?? [],
+    queryFn: async () => (await supabase.from("pets").select("id,name").eq("status","active").order("name")).data ?? [],
   });
   const { data } = useQuery({
     queryKey: ["expenses"],

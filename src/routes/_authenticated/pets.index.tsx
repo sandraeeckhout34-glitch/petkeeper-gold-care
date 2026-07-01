@@ -15,7 +15,7 @@ function PetsPage() {
   const { data: pets } = useQuery({
     queryKey: ["pets"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("pets").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("pets").select("*").eq("status","active").order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
