@@ -107,7 +107,9 @@ function HomePage() {
     },
   });
 
-  const firstName = (profile.data?.full_name || "").split(" ")[0];
+  const nameParts = (profile.data?.full_name || "").trim().split(/\s+/).filter(Boolean);
+  // Full name may be stored "Lastname Firstname" (common in NL); prefer the last token as the given name.
+  const firstName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0] ?? "";
   const monthTotal = (expenses.data ?? []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
   const currency = (expenses.data?.[0] as any)?.currency ?? "EUR";
   const fmt = (n: number) => new Intl.NumberFormat("nl-NL", { style: "currency", currency }).format(n);
