@@ -19,6 +19,7 @@ import { Route as AuthenticatedRemindersRouteImport } from './routes/_authentica
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
+import { Route as AuthenticatedArchivedPetsRouteImport } from './routes/_authenticated/archived-pets'
 import { Route as AuthenticatedPetsIndexRouteImport } from './routes/_authenticated/pets.index'
 import { Route as AuthenticatedPetsIdRouteImport } from './routes/_authenticated/pets.$id'
 
@@ -71,6 +72,12 @@ const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedArchivedPetsRoute =
+  AuthenticatedArchivedPetsRouteImport.update({
+    id: '/archived-pets',
+    path: '/archived-pets',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPetsIndexRoute = AuthenticatedPetsIndexRouteImport.update({
   id: '/pets/',
   path: '/pets/',
@@ -87,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/archived-pets': typeof AuthenticatedArchivedPetsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/expenses': typeof AuthenticatedExpensesRoute
   '/home': typeof AuthenticatedHomeRoute
@@ -100,6 +108,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/archived-pets': typeof AuthenticatedArchivedPetsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/expenses': typeof AuthenticatedExpensesRoute
   '/home': typeof AuthenticatedHomeRoute
@@ -115,6 +124,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/archived-pets': typeof AuthenticatedArchivedPetsRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/reset-password'
+    | '/archived-pets'
     | '/calendar'
     | '/expenses'
     | '/home'
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/reset-password'
+    | '/archived-pets'
     | '/calendar'
     | '/expenses'
     | '/home'
@@ -157,6 +169,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/reset-password'
+    | '/_authenticated/archived-pets'
     | '/_authenticated/calendar'
     | '/_authenticated/expenses'
     | '/_authenticated/home'
@@ -246,6 +259,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCalendarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/archived-pets': {
+      id: '/_authenticated/archived-pets'
+      path: '/archived-pets'
+      fullPath: '/archived-pets'
+      preLoaderRoute: typeof AuthenticatedArchivedPetsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/pets/': {
       id: '/_authenticated/pets/'
       path: '/pets'
@@ -264,6 +284,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedArchivedPetsRoute: typeof AuthenticatedArchivedPetsRoute
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedExpensesRoute: typeof AuthenticatedExpensesRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
@@ -274,6 +295,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedArchivedPetsRoute: AuthenticatedArchivedPetsRoute,
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedExpensesRoute: AuthenticatedExpensesRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
