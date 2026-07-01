@@ -41,12 +41,12 @@ function CalendarPage() {
     enabled: !!day,
     queryFn: async () => {
       const [a, r, m, v] = await Promise.all([
-        supabase.from("appointments").select("*, pets(name,status)").eq("date", day).order("time"),
-        supabase.from("reminders").select("*, pets(name,status)").eq("date", day),
-        supabase.from("medications").select("*, pets(name,status)").lte("start_date", day).or(`end_date.is.null,end_date.gte.${day}`),
-        supabase.from("vaccinations").select("*, pets(name,status)").eq("next_due_date", day),
+        supabase.from("appointments").select("*, pets(name,status,deleted_at)").eq("date", day).order("time"),
+        supabase.from("reminders").select("*, pets(name,status,deleted_at)").eq("date", day),
+        supabase.from("medications").select("*, pets(name,status,deleted_at)").lte("start_date", day).or(`end_date.is.null,end_date.gte.${day}`),
+        supabase.from("vaccinations").select("*, pets(name,status,deleted_at)").eq("next_due_date", day),
       ]);
-      const visible = (rows: any[] | null) => (rows ?? []).filter((row: any) => !row.pet_id || row.pets?.status !== "deleted");
+      const visible = (rows: any[] | null) => (rows ?? []).filter(isVisiblePetRecord);
       return {
         appointments: visible(a.data),
         reminders: visible(r.data),
@@ -80,6 +80,10 @@ function CalendarPage() {
       <Section icon={Bell} title="Herinneringen" items={events?.reminders ?? []} empty="Geen herinneringen" render={(r: any) => `${r.title} • ${(r.time ?? "").slice(0,5)}`} />
     </>
   );
+}
+
+function isVisiblePetRecord(row: any) {
+  return !row.pet_id || (row.pets?.status !== "deleted" && !row.pets?.deleted_at);
 }
 
 function Section({ icon: Icon, title, items, render, empty }: any) {

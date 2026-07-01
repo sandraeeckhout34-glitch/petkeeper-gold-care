@@ -74,24 +74,24 @@ function HomePage() {
   const appts = useQuery({
     queryKey: ["appointments", "today"],
     queryFn: async () => {
-      const { data } = await supabase.from("appointments").select("*, pets(name,status)").eq("date", today).order("time");
-      return (data ?? []).filter((row: any) => !row.pet_id || row.pets?.status !== "deleted");
+      const { data } = await supabase.from("appointments").select("*, pets(name,status,deleted_at)").eq("date", today).order("time");
+      return (data ?? []).filter(isVisiblePetRecord);
     },
   });
 
   const meds = useQuery({
     queryKey: ["medications", "active"],
     queryFn: async () => {
-      const { data } = await supabase.from("medications").select("*, pets(name,status)").or(`end_date.is.null,end_date.gte.${today}`).limit(5);
-      return (data ?? []).filter((row: any) => !row.pet_id || row.pets?.status !== "deleted");
+      const { data } = await supabase.from("medications").select("*, pets(name,status,deleted_at)").or(`end_date.is.null,end_date.gte.${today}`).limit(5);
+      return (data ?? []).filter(isVisiblePetRecord);
     },
   });
 
   const vacs = useQuery({
     queryKey: ["vaccinations", "upcoming"],
     queryFn: async () => {
-      const { data } = await supabase.from("vaccinations").select("*, pets(name,status)").gte("next_due_date", today).lte("next_due_date", in30).order("next_due_date").limit(5);
-      return (data ?? []).filter((row: any) => !row.pet_id || row.pets?.status !== "deleted");
+      const { data } = await supabase.from("vaccinations").select("*, pets(name,status,deleted_at)").gte("next_due_date", today).lte("next_due_date", in30).order("next_due_date").limit(5);
+      return (data ?? []).filter(isVisiblePetRecord);
     },
   });
 
@@ -100,10 +100,10 @@ function HomePage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("expenses")
-        .select("amount,currency,date,pet_id,pets(status)")
+        .select("amount,currency,date,pet_id,pets(status,deleted_at)")
         .gte("date", monthStart)
         .lt("date", nextMonthStart);
-      return (data ?? []).filter((row: any) => !row.pet_id || row.pets?.status !== "deleted");
+      return (data ?? []).filter(isVisiblePetRecord);
     },
   });
 
@@ -176,6 +176,10 @@ function HomePage() {
       </div>
     </>
   );
+}
+
+function isVisiblePetRecord(row: any) {
+  return !row.pet_id || (row.pets?.status !== "deleted" && !row.pets?.deleted_at);
 }
 
 const QAction = React.forwardRef<HTMLButtonElement, any>(function QAction({ icon: Icon, label, ...props }, ref) {

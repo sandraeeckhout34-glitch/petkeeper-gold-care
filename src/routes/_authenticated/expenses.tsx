@@ -25,11 +25,11 @@ function ExpensesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("expenses")
-        .select("*, pets(name,status)")
+        .select("*, pets(name,status,deleted_at)")
         .order("date", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []).filter((row: any) => !row.pet_id || row.pets?.status !== "deleted");
+      return (data ?? []).filter((row: any) => !row.pet_id || (row.pets?.status !== "deleted" && !row.pets?.deleted_at));
     },
   });
 
