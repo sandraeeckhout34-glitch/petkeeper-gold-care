@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, PawPrint, Plus, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, PawPrint, Plus, Pencil, Trash2, Archive, Heart, MoreVertical, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/_authenticated/pets/$id")({
   head: () => ({ meta: [{ title: "Huisdier — PetKeeper" }] }),
@@ -38,15 +39,85 @@ function PetDetail() {
 
   const del = useMutation({
     mutationFn: async () => {
+      // Wipe linked records first (tables may not cascade)
+      const tables = ["appointments","medications","vaccinations","documents","weight_entries","expenses","reminders"] as const;
+      // Fetch document/expense files so we can clean storage
+      const [docs, exps] = await Promise.all([
+        supabase.from("documents").select("file_path").eq("pet_id", id),
+        supabase.from("expenses").select("invoice_path").eq("pet_id", id),
+      ]);
+      const paths = [
+        ...((docs.data ?? []).map((d: any) => d.file_path).filter(Boolean)),
+        ...((exps.data ?? []).map((d: any) => d.invoice_path).filter(Boolean)),
+      ];
+      if (paths.length) await supabase.storage.from("pet-documents").remove(paths);
+      for (const t of tables) {
+        const { error } = await supabase.from(t).delete().eq("pet_id", id);
+        if (error) throw error;
+      }
       const { error } = await supabase.from("pets").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["pets"] });
-      toast.success("Huisdier verwijderd");
+      qc.invalidateQueries();
+      toast.success("Huisdier permanent verwijderd");
       navigate({ to: "/pets" });
     },
+    onError: (e: any) => toast.error(e.message),
   });
+
+  const archive = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("pets").update({ status: "archived" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries();
+      toast.success("Huisdier gearchiveerd");
+      navigate({ to: "/pets" });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const restore = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("pets").update({ status: "active", deceased_date: null, memorial_note: null }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries();
+      toast.success("Huisdier teruggeplaatst");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const markDeceased = useMutation({
+    mutationFn: async (payload: { deceased_date: string; memorial_note: string }) => {
+      const { error } = await supabase.from("pets").update({
+        status: "deceased",
+        deceased_date: payload.deceased_date || null,
+        memorial_note: payload.memorial_note || null,
+      }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries();
+      toast.success("Gemarkeerd als overleden");
+      navigate({ to: "/pets" });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const [deceasedOpen, setDeceasedOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [restoreOpen, setRestoreOpen] = useState(false);
+  const [deceasedDate, setDeceasedDate] = useState("");
+  const [memorialNote, setMemorialNote] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+
+  const status = (pet as any).status ?? "active";
+  const isArchived = status !== "active";
 
   if (isLoading || !pet) return <div className="text-center py-16 text-muted-foreground">Laden…</div>;
 
@@ -66,37 +137,136 @@ function PetDetail() {
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-display font-medium truncate">{pet.name}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-display font-medium truncate">{pet.name}</h1>
+              {status === "deceased" && <span className="text-[10px] uppercase tracking-widest text-muted-foreground border border-border rounded-full px-2 py-0.5">In herinnering</span>}
+              {status === "archived" && <span className="text-[10px] uppercase tracking-widest text-muted-foreground border border-border rounded-full px-2 py-0.5">Gearchiveerd</span>}
+            </div>
             <div className="text-sm text-muted-foreground">{[pet.breed, pet.species].filter(Boolean).join(" • ") || "—"}</div>
             {pet.birth_date && (
               <div className="text-xs text-muted-foreground mt-0.5">{calculateAge(pet.birth_date)}</div>
             )}
+            {status === "deceased" && (pet as any).deceased_date && (
+              <div className="text-xs text-muted-foreground mt-0.5">Overleden op {(pet as any).deceased_date}</div>
+            )}
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 shrink-0"><MoreVertical className="w-5 h-5" /></Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="rounded-2xl min-w-52">
+              {isArchived && (
+                <DropdownMenuItem onSelect={() => setRestoreOpen(true)}>
+                  <RotateCcw className="w-4 h-4 mr-2" /> Terugplaatsen
+                </DropdownMenuItem>
+              )}
+              {!isArchived && (
+                <>
+                  <DropdownMenuItem onSelect={() => setDeceasedOpen(true)}>
+                    <Heart className="w-4 h-4 mr-2" /> Markeer als overleden
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setArchiveOpen(true)}>
+                    <Archive className="w-4 h-4 mr-2" /> Huisdier archiveren
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setDeleteOpen(true)} className="text-destructive focus:text-destructive">
+                <Trash2 className="w-4 h-4 mr-2" /> Permanent verwijderen
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <div className="grid grid-cols-3 gap-2 mt-5">
+        <div className="grid grid-cols-2 gap-2 mt-5">
           <PetFormDialog initial={pet} trigger={
             <Button variant="secondary" className="rounded-full h-10"><Pencil className="w-4 h-4 mr-1" />Bewerken</Button>
           } />
           <Button variant="secondary" className="rounded-full h-10" asChild>
             <a href="#info">Overzicht</a>
           </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="secondary" className="rounded-full h-10 text-destructive"><Trash2 className="w-4 h-4 mr-1" />Verwijder</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="rounded-3xl">
-              <AlertDialogHeader>
-                <AlertDialogTitle>{pet.name} verwijderen?</AlertDialogTitle>
-                <AlertDialogDescription>Dit verwijdert het huisdier en alle gekoppelde gegevens. Dit kan niet ongedaan worden gemaakt.</AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel className="rounded-full">Annuleren</AlertDialogCancel>
-                <AlertDialogAction onClick={() => del.mutate()} className="rounded-full">Verwijderen</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
+        {status === "deceased" && (pet as any).memorial_note && (
+          <div className="mt-4 p-4 rounded-2xl bg-secondary/40 border border-border text-sm italic text-muted-foreground whitespace-pre-line">
+            {(pet as any).memorial_note}
+          </div>
+        )}
       </div>
+
+      {/* Mark as deceased */}
+      <Dialog open={deceasedOpen} onOpenChange={setDeceasedOpen}>
+        <DialogContent className="rounded-3xl max-w-md">
+          <DialogHeader><DialogTitle className="font-display text-2xl">Huisdier markeren als overleden?</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Alle medische gegevens, documenten, kosten, afspraken en notities blijven veilig bewaard, maar het huisdier wordt gemarkeerd als overleden en verborgen uit de lijst met actieve huisdieren.</p>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Datum van overlijden</Label>
+              <Input type="date" value={deceasedDate} onChange={(e) => setDeceasedDate(e.target.value)} className="rounded-xl h-11" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Herdenkingsnotitie</Label>
+              <Textarea value={memorialNote} onChange={(e) => setMemorialNote(e.target.value)} className="rounded-xl" placeholder="Een mooie herinnering…" />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="secondary" onClick={() => setDeceasedOpen(false)} className="rounded-full h-11 flex-1">Annuleren</Button>
+            <Button onClick={() => { markDeceased.mutate({ deceased_date: deceasedDate, memorial_note: memorialNote }); setDeceasedOpen(false); }} className="rounded-full h-11 flex-1">Bevestigen</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Archive */}
+      <AlertDialog open={archiveOpen} onOpenChange={setArchiveOpen}>
+        <AlertDialogContent className="rounded-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{pet.name} archiveren?</AlertDialogTitle>
+            <AlertDialogDescription>Gebruik dit wanneer het huisdier niet meer bij jou is, maar je de gegevens wilt bewaren. Het huisdier wordt verborgen uit de actieve lijst en verplaatst naar Gearchiveerde huisdieren.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-full">Annuleren</AlertDialogCancel>
+            <AlertDialogAction onClick={() => archive.mutate()} className="rounded-full">Archiveren</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Restore */}
+      <AlertDialog open={restoreOpen} onOpenChange={setRestoreOpen}>
+        <AlertDialogContent className="rounded-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{pet.name} terugplaatsen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {status === "deceased"
+                ? "Weet je zeker dat je dit overleden huisdier terug wilt zetten als actief? De overlijdensdatum en herdenkingsnotitie worden gewist."
+                : "Het huisdier verschijnt weer in je actieve lijst."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-full">Annuleren</AlertDialogCancel>
+            <AlertDialogAction onClick={() => restore.mutate()} className="rounded-full">Terugplaatsen</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Permanent delete */}
+      <Dialog open={deleteOpen} onOpenChange={(o) => { setDeleteOpen(o); if (!o) setDeleteConfirm(""); }}>
+        <DialogContent className="rounded-3xl max-w-md">
+          <DialogHeader><DialogTitle className="font-display text-2xl text-destructive">Dit huisdier permanent verwijderen?</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Dit verwijdert het huisdier en alle gekoppelde gegevens permanent, inclusief afspraken, medicatie, vaccinaties, documenten, gewichtsmetingen, kosten en herinneringen. Dit kan niet ongedaan worden gemaakt.</p>
+          <div className="space-y-1.5">
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Typ <span className="font-mono text-destructive">DELETE</span> om te bevestigen</Label>
+            <Input value={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.value)} className="rounded-xl h-11" placeholder="DELETE" />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="secondary" onClick={() => setDeleteOpen(false)} className="rounded-full h-11 flex-1">Annuleren</Button>
+            <Button
+              disabled={deleteConfirm !== "DELETE" || del.isPending}
+              onClick={() => del.mutate()}
+              className="rounded-full h-11 flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {del.isPending ? "Verwijderen…" : "Permanent verwijderen"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Tabs defaultValue="info" className="w-full">
         <TabsList className="w-full rounded-full bg-card border border-border p-1 h-11 grid grid-cols-6">
