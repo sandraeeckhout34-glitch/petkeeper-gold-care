@@ -318,7 +318,7 @@ function UploadDocDialog({ petId }: { petId: string }) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["documents", petId] });
-      toast.success("Document uploaded");
+      toast.success("Document geüpload");
       setOpen(false); setTitle(""); setDate(""); setNotes(""); setFile(null);
     },
     onError: (e: any) => toast.error(e.message),
@@ -326,21 +326,21 @@ function UploadDocDialog({ petId }: { petId: string }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button size="sm" className="rounded-full h-9"><Plus className="w-4 h-4 mr-1" />Upload</Button></DialogTrigger>
+      <DialogTrigger asChild><Button size="sm" className="rounded-full h-9"><Plus className="w-4 h-4 mr-1" />Uploaden</Button></DialogTrigger>
       <DialogContent className="rounded-3xl max-w-md">
-        <DialogHeader><DialogTitle className="font-display text-2xl">Upload document</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle className="font-display text-2xl">Document uploaden</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-3">
-          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Title</Label>
+          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Titel</Label>
             <Input required value={title} onChange={(e) => setTitle(e.target.value)} className="rounded-xl h-11" /></div>
-          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">File</Label>
+          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Bestand</Label>
             <Input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="rounded-xl h-11" /></div>
-          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Date</Label>
+          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Datum</Label>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="rounded-xl h-11" /></div>
-          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Notes</Label>
+          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Notities</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="rounded-xl" /></div>
           <DialogFooter>
             <Button type="submit" disabled={mut.isPending} className="w-full h-12 rounded-full">
-              {mut.isPending ? "Uploading…" : "Upload"}
+              {mut.isPending ? "Uploaden…" : "Uploaden"}
             </Button>
           </DialogFooter>
         </form>
