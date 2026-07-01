@@ -5,8 +5,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { PetFormDialog, SubRecordDialog, type SubFieldDef } from "@/lib/pet-forms";
-import { calculateAge, formatTime, medicationFields, vaccinationFields, documentFields, expenseFields } from "@/lib/pet-forms";
+import {
+  PetFormDialog, SubRecordDialog, type SubFieldDef,
+  calculateAge, formatTime,
+  medicationFields, vaccinationFields, expenseFields,
+} from "@/lib/pet-forms";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
