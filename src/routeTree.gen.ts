@@ -18,7 +18,6 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedRemindersRouteImport } from './routes/_authenticated/reminders'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
-import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedPetsIndexRouteImport } from './routes/_authenticated/pets.index'
 import { Route as AuthenticatedPetsIdRouteImport } from './routes/_authenticated/pets.$id'
 
@@ -66,11 +65,6 @@ const AuthenticatedExpensesRoute = AuthenticatedExpensesRouteImport.update({
   path: '/expenses',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
-  id: '/calendar',
-  path: '/calendar',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedPetsIndexRoute = AuthenticatedPetsIndexRouteImport.update({
   id: '/pets/',
   path: '/pets/',
@@ -87,7 +81,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/calendar': typeof AuthenticatedCalendarRoute
   '/expenses': typeof AuthenticatedExpensesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/reminders': typeof AuthenticatedRemindersRoute
@@ -100,7 +93,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/calendar': typeof AuthenticatedCalendarRoute
   '/expenses': typeof AuthenticatedExpensesRoute
   '/home': typeof AuthenticatedHomeRoute
   '/reminders': typeof AuthenticatedRemindersRoute
@@ -115,7 +107,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/reminders': typeof AuthenticatedRemindersRoute
@@ -130,7 +121,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/reset-password'
-    | '/calendar'
     | '/expenses'
     | '/home'
     | '/reminders'
@@ -143,7 +133,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/reset-password'
-    | '/calendar'
     | '/expenses'
     | '/home'
     | '/reminders'
@@ -157,7 +146,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/forgot-password'
     | '/reset-password'
-    | '/_authenticated/calendar'
     | '/_authenticated/expenses'
     | '/_authenticated/home'
     | '/_authenticated/reminders'
@@ -239,13 +227,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedExpensesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/calendar': {
-      id: '/_authenticated/calendar'
-      path: '/calendar'
-      fullPath: '/calendar'
-      preLoaderRoute: typeof AuthenticatedCalendarRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/pets/': {
       id: '/_authenticated/pets/'
       path: '/pets'
@@ -264,7 +245,6 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedExpensesRoute: typeof AuthenticatedExpensesRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedRemindersRoute: typeof AuthenticatedRemindersRoute
@@ -274,7 +254,6 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedExpensesRoute: AuthenticatedExpensesRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedRemindersRoute: AuthenticatedRemindersRoute,
