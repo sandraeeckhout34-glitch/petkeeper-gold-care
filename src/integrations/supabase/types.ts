@@ -76,6 +76,7 @@ export type Database = {
           notes: string | null
           pet_id: string
           title: string
+          type: string | null
           updated_at: string
           user_id: string
         }
@@ -87,6 +88,7 @@ export type Database = {
           notes?: string | null
           pet_id: string
           title: string
+          type?: string | null
           updated_at?: string
           user_id: string
         }
@@ -98,6 +100,7 @@ export type Database = {
           notes?: string | null
           pet_id?: string
           title?: string
+          type?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -118,8 +121,11 @@ export type Database = {
           created_at: string
           currency: string
           date: string | null
+          description: string | null
           id: string
+          invoice_path: string | null
           notes: string | null
+          paid: boolean
           pet_id: string | null
           title: string
           updated_at: string
@@ -131,8 +137,11 @@ export type Database = {
           created_at?: string
           currency?: string
           date?: string | null
+          description?: string | null
           id?: string
+          invoice_path?: string | null
           notes?: string | null
+          paid?: boolean
           pet_id?: string | null
           title: string
           updated_at?: string
@@ -144,8 +153,11 @@ export type Database = {
           created_at?: string
           currency?: string
           date?: string | null
+          description?: string | null
           id?: string
+          invoice_path?: string | null
           notes?: string | null
+          paid?: boolean
           pet_id?: string | null
           title?: string
           updated_at?: string

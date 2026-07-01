@@ -1,12 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, PawPrint, Calendar, Bell, Settings } from "lucide-react";
+import { Home, PawPrint, Calendar, Wallet, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { to: "/home", label: "Home", icon: Home },
   { to: "/pets", label: "Pets", icon: PawPrint },
   { to: "/calendar", label: "Calendar", icon: Calendar },
-  { to: "/reminders", label: "Reminders", icon: Bell },
+  { to: "/expenses", label: "Expenses", icon: Wallet },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 

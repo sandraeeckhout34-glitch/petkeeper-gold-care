@@ -1,20 +1,41 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { PawPrint, CalendarDays, Pill, Wallet, Bell, Plus, ArrowRight } from "lucide-react";
+import React from "react";
+import { PawPrint, CalendarDays, Pill, Syringe, FileText, Wallet, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
-import { PetFormDialog, SubRecordDialog } from "@/lib/pet-forms";
+import {
+  PetFormDialog, SubRecordDialog, type SubFieldDef,
+  medicationFields, vaccinationFields, documentFields, expenseFields,
+} from "@/lib/pet-forms";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({ meta: [{ title: "Home — PetKeeper" }] }),
   component: HomePage,
 });
 
+const appointmentFields: SubFieldDef[] = [
+  {
+    key: "title", label: "Appointment Type", type: "select-other",
+    options: ["Veterinary Check-up", "Vaccination", "Grooming", "Dental Care", "Blood Test",
+      "Medication Follow-up", "Deworming", "Flea & Tick Treatment", "Weight Check", "Surgery",
+      "Emergency", "Other"],
+    otherKey: "custom_title", otherLabel: "Custom Appointment Title",
+    otherPlaceholder: "Enter a title",
+  },
+  { key: "date", label: "Date", type: "date" },
+  { key: "time", label: "Time", type: "time" },
+  { key: "location", label: "Location", type: "text" },
+  { key: "provider", label: "Veterinarian / Groomer", type: "text" },
+  { key: "notes", label: "Notes", type: "textarea" },
+];
+
 function HomePage() {
   const today = format(new Date(), "yyyy-MM-dd");
   const in30 = format(new Date(Date.now() + 30 * 864e5), "yyyy-MM-dd");
+  const monthKey = format(new Date(), "yyyy-MM");
 
   const profile = useQuery({
     queryKey: ["profile"],
@@ -57,15 +78,20 @@ function HomePage() {
     },
   });
 
-  const docs = useQuery({
-    queryKey: ["documents", "recent"],
+  const expenses = useQuery({
+    queryKey: ["expenses", "month", monthKey],
     queryFn: async () => {
-      const { data } = await supabase.from("documents").select("*, pets(name)").order("created_at", { ascending: false }).limit(3);
+      const { data } = await supabase.from("expenses").select("amount,currency,date").ilike("date", `${monthKey}%`);
       return data ?? [];
     },
   });
 
   const firstName = (profile.data?.full_name || "").split(" ")[0];
+  const monthTotal = (expenses.data ?? []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const currency = (expenses.data?.[0] as any)?.currency ?? "USD";
+  const fmt = (n: number) => new Intl.NumberFormat(undefined, { style: "currency", currency }).format(n);
+
+  const petList = pets.data ?? [];
 
   return (
     <>
@@ -76,23 +102,21 @@ function HomePage() {
 
       {/* Quick actions */}
       <section className="mb-8">
-        <div className="grid grid-cols-5 gap-2">
-          <PetFormDialog trigger={<QAction icon={PawPrint} label="Pet" />} />
-          <QuickAdd icon={CalendarDays} label="Visit" table="appointments" pets={pets.data ?? []} />
-          <QuickAdd icon={Pill} label="Med" table="medications" pets={pets.data ?? []} />
-          <QuickAdd icon={Bell} label="Remind" table="reminders" pets={pets.data ?? []} />
-          <Link to="/expenses" className="flex flex-col items-center gap-1 rounded-2xl bg-card border border-border py-3 shadow-[var(--shadow-soft)]">
-            <Wallet className="w-5 h-5 text-primary" strokeWidth={1.75} />
-            <span className="text-[10px] font-medium">Costs</span>
-          </Link>
+        <div className="grid grid-cols-3 gap-2">
+          <PetFormDialog trigger={<QAction icon={PawPrint} label="Add Pet" />} />
+          <QuickAdd pets={petList} icon={CalendarDays} label="Add Visit" table="appointments" fields={appointmentFields} />
+          <QuickAdd pets={petList} icon={Pill} label="Add Med" table="medications" fields={medicationFields} />
+          <QuickAdd pets={petList} icon={Syringe} label="Add Vacc" table="vaccinations" fields={vaccinationFields} />
+          <QuickAdd pets={petList} icon={FileText} label="Upload Doc" table="documents" fields={documentFields} />
+          <QuickAdd pets={petList} icon={Wallet} label="Add Cost" table="expenses" fields={expenseFields} />
         </div>
       </section>
 
       {/* My Pets */}
       <SectionHeader title="My Pets" to="/pets" />
-      {pets.data && pets.data.length > 0 ? (
+      {petList.length > 0 ? (
         <div className="flex gap-3 overflow-x-auto -mx-5 px-5 pb-2 mb-8 scroll-smooth">
-          {pets.data.map((p) => (
+          {petList.map((p) => (
             <Link key={p.id} to="/pets/$id" params={{ id: p.id }} className="shrink-0 w-32 bg-card rounded-3xl p-4 border border-border shadow-[var(--shadow-soft)]">
               <PetAvatar url={p.photo_url} name={p.name} />
               <div className="mt-3 font-medium text-sm truncate">{p.name}</div>
@@ -104,7 +128,7 @@ function HomePage() {
         <EmptyCard message="Add your first pet to begin" cta={<PetFormDialog trigger={<Button size="sm" className="rounded-full">Add pet</Button>} />} />
       )}
 
-      <SectionHeader title="Today's Appointments" />
+      <SectionHeader title="Today's Appointments" to="/calendar" />
       <ListCard items={appts.data ?? []} render={(a) => (
         <Row primary={a.title} secondary={`${a.pets?.name ?? ""} • ${a.time ?? ""}`} />
       )} empty="No appointments today" />
@@ -119,73 +143,37 @@ function HomePage() {
         <Row primary={v.vaccine} secondary={`${v.pets?.name ?? ""} • Due ${v.next_due_date}`} />
       )} empty="Nothing due in 30 days" />
 
-      <SectionHeader title="Recent Documents" />
-      <ListCard items={docs.data ?? []} render={(d) => (
-        <Row primary={d.title} secondary={`${d.pets?.name ?? ""} • ${d.date ?? ""}`} />
-      )} empty="No documents yet" />
+      <SectionHeader title="Expenses this month" to="/expenses" />
+      <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] px-5 py-5 mb-8 flex items-center justify-between">
+        <div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">{format(new Date(), "MMMM yyyy")}</div>
+          <div className="font-display text-2xl">{fmt(monthTotal)}</div>
+        </div>
+        <Wallet className="w-6 h-6 text-primary" strokeWidth={1.5} />
+      </div>
     </>
   );
 }
 
-function QAction({ icon: Icon, label }: any) {
+const QAction = React.forwardRef<HTMLButtonElement, any>(function QAction({ icon: Icon, label, ...props }, ref) {
   return (
-    <button className="flex flex-col items-center gap-1 rounded-2xl bg-card border border-border py-3 shadow-[var(--shadow-soft)] w-full">
+    <button ref={ref} {...props} className="flex flex-col items-center gap-1 rounded-2xl bg-card border border-border py-3 shadow-[var(--shadow-soft)] w-full">
       <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "var(--gradient-champagne)" }}>
-        <Plus className="w-4 h-4 text-primary-foreground" />
+        <Icon className="w-4 h-4 text-primary-foreground" strokeWidth={1.75} />
       </div>
       <span className="text-[10px] font-medium">{label}</span>
     </button>
   );
-}
+});
 
-function QuickAdd({ icon: Icon, label, table, pets }: any) {
-  const petOpts = pets.map((p: any) => p.name);
-  if (pets.length === 0) {
-    return (
-      <button disabled className="flex flex-col items-center gap-1 rounded-2xl bg-card border border-border py-3 opacity-50 w-full">
-        <Icon className="w-5 h-5 text-primary" strokeWidth={1.75} />
-        <span className="text-[10px] font-medium">{label}</span>
-      </button>
-    );
-  }
-  const fieldsByTable: any = {
-    appointments: [
-      { key: "title", label: "Title", type: "text" },
-      { key: "date", label: "Date", type: "date" },
-      { key: "time", label: "Time", type: "time" },
-      { key: "location", label: "Location", type: "text" },
-      { key: "type", label: "Type", type: "select", options: ["Vet", "Grooming", "Training", "Other"] },
-      { key: "notes", label: "Notes", type: "textarea" },
-    ],
-    medications: [
-      { key: "name", label: "Medication name", type: "text" },
-      { key: "dosage", label: "Dosage", type: "text" },
-      { key: "frequency", label: "Frequency", type: "text" },
-      { key: "start_date", label: "Start date", type: "date" },
-      { key: "end_date", label: "End date", type: "date" },
-      { key: "notes", label: "Notes", type: "textarea" },
-    ],
-    reminders: [
-      { key: "title", label: "Title", type: "text" },
-      { key: "category", label: "Category", type: "select", options: ["Feeding", "Walk", "Grooming", "Medication", "Vet", "Other"] },
-      { key: "date", label: "Date", type: "date" },
-      { key: "time", label: "Time", type: "time" },
-      { key: "notes", label: "Notes", type: "textarea" },
-    ],
-  };
-  const petId = pets[0]?.id;
+function QuickAdd({ icon, label, table, fields, pets }: any) {
   return (
     <SubRecordDialog
       table={table}
-      petId={petId}
-      title={`New ${label.toLowerCase()}`}
-      fields={fieldsByTable[table]}
-      trigger={
-        <button className="flex flex-col items-center gap-1 rounded-2xl bg-card border border-border py-3 shadow-[var(--shadow-soft)] w-full">
-          <Icon className="w-5 h-5 text-primary" strokeWidth={1.75} />
-          <span className="text-[10px] font-medium">{label}</span>
-        </button>
-      }
+      pets={pets}
+      title={label}
+      fields={fields}
+      trigger={<QAction icon={icon} label={label} />}
     />
   );
 }

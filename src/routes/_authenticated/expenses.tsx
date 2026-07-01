@@ -1,32 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, Wallet } from "lucide-react";
+import { Plus, Pencil, Trash2, Wallet, CheckCircle2, Circle, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
-import { SubRecordDialog } from "@/lib/pet-forms";
+import { SubRecordDialog, expenseFields } from "@/lib/pet-forms";
 
 export const Route = createFileRoute("/_authenticated/expenses")({
   head: () => ({ meta: [{ title: "Expenses — PetKeeper" }] }),
   component: ExpensesPage,
 });
 
-const fields = [
-  { key: "title", label: "Title", type: "text" as const },
-  { key: "amount", label: "Amount", type: "number" as const },
-  { key: "currency", label: "Currency", type: "select" as const, options: ["USD", "EUR", "GBP", "CAD", "AUD", "JPY"] },
-  { key: "category", label: "Category", type: "select" as const, options: ["Food", "Vet", "Grooming", "Medication", "Toys", "Insurance", "Boarding", "Other"] },
-  { key: "date", label: "Date", type: "date" as const },
-  { key: "notes", label: "Notes", type: "textarea" as const },
-];
-
 function ExpensesPage() {
   const qc = useQueryClient();
   const { data: pets } = useQuery({
     queryKey: ["pets"],
-    queryFn: async () => (await supabase.from("pets").select("id,name")).data ?? [],
+    queryFn: async () => (await supabase.from("pets").select("id,name").order("name")).data ?? [],
   });
   const { data } = useQuery({
     queryKey: ["expenses"],
@@ -42,20 +33,31 @@ function ExpensesPage() {
   });
 
   const del = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("expenses").delete().eq("id", id);
+    mutationFn: async (row: any) => {
+      if (row.invoice_path) await supabase.storage.from("pet-documents").remove([row.invoice_path]);
+      const { error } = await supabase.from("expenses").delete().eq("id", row.id);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["expenses"] }); toast.success("Removed"); },
   });
 
-  const now = new Date();
-  const monthKey = format(now, "yyyy-MM");
-  const total = (data ?? []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
-  const monthTotal = (data ?? []).filter((r: any) => (r.date ?? "").startsWith(monthKey))
-    .reduce((s, r: any) => s + Number(r.amount || 0), 0);
+  const monthKey = format(new Date(), "yyyy-MM");
   const currency = (data?.[0] as any)?.currency ?? "USD";
   const fmt = (n: number, c: string) => new Intl.NumberFormat(undefined, { style: "currency", currency: c }).format(n);
+  const monthTotal = (data ?? []).filter((r: any) => (r.date ?? "").startsWith(monthKey))
+    .reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const total = (data ?? []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+  const perPet = new Map<string, number>();
+  (data ?? []).forEach((r: any) => {
+    const key = r.pets?.name ?? "Unassigned";
+    perPet.set(key, (perPet.get(key) ?? 0) + Number(r.amount || 0));
+  });
+
+  async function openInvoice(row: any) {
+    if (!row.invoice_path) return;
+    const { data } = await supabase.storage.from("pet-documents").createSignedUrl(row.invoice_path, 60);
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+  }
 
   return (
     <>
@@ -65,15 +67,15 @@ function ExpensesPage() {
         action={
           <SubRecordDialog
             table="expenses"
-            petId={pets?.[0]?.id}
+            pets={pets ?? []}
             title="New expense"
-            fields={fields}
+            fields={expenseFields}
             trigger={<Button size="icon" className="rounded-full w-11 h-11 shadow-[var(--shadow-soft)]"><Plus className="w-5 h-5" /></Button>}
           />
         }
       />
 
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] p-4">
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">This month</div>
           <div className="font-display text-2xl">{fmt(monthTotal, currency)}</div>
@@ -83,6 +85,22 @@ function ExpensesPage() {
           <div className="font-display text-2xl">{fmt(total, currency)}</div>
         </div>
       </div>
+
+      {perPet.size > 0 && (
+        <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] p-4 mb-6">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Per pet</div>
+          <div className="space-y-1.5">
+            {Array.from(perPet.entries()).map(([name, sum]) => (
+              <div key={name} className="flex justify-between text-sm">
+                <span className="text-foreground">{name}</span>
+                <span className="font-medium">{fmt(sum, currency)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <h2 className="font-display text-lg mb-3">Recent expenses</h2>
 
       {!data || data.length === 0 ? (
         <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] p-10 text-center">
@@ -95,16 +113,22 @@ function ExpensesPage() {
         <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] divide-y divide-border overflow-hidden">
           {data.map((r: any) => (
             <div key={r.id} className="px-5 py-4 flex items-start gap-3">
+              <button onClick={() => openInvoice(r)} className="mt-0.5 text-muted-foreground" title={r.invoice_path ? "Open invoice" : "No invoice"}>
+                {r.paid ? <CheckCircle2 className="w-4 h-4 text-primary" /> : <Circle className="w-4 h-4" />}
+              </button>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium truncate">{r.title}</div>
+                <div className="text-sm font-medium truncate flex items-center gap-1.5">
+                  {r.title}
+                  {r.invoice_path && <Paperclip className="w-3 h-3 text-muted-foreground" />}
+                </div>
                 <div className="text-xs text-muted-foreground truncate">
                   {[r.category, r.date, r.pets?.name].filter(Boolean).join(" • ")}
                 </div>
               </div>
               <div className="text-sm font-medium whitespace-nowrap">{fmt(Number(r.amount || 0), r.currency || "USD")}</div>
-              <SubRecordDialog table="expenses" petId={r.pet_id} title="Edit expense" fields={fields} initial={r}
+              <SubRecordDialog table="expenses" pets={pets ?? []} title="Edit expense" fields={expenseFields} initial={r}
                 trigger={<Button variant="ghost" size="icon" className="rounded-full h-8 w-8"><Pencil className="w-4 h-4" /></Button>} />
-              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 text-destructive" onClick={() => del.mutate(r.id)}>
+              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 text-destructive" onClick={() => del.mutate(r)}>
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
