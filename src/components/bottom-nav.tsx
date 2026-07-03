@@ -24,13 +24,17 @@ export function BottomNav() {
               <Link
                 key={item.to}
                 to={item.to}
+                aria-label={item.label}
+                aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 rounded-full px-3 py-2 min-w-14 transition-all",
-                  active ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                  "flex flex-col items-center justify-center gap-0.5 rounded-full min-h-11 min-w-14 px-3 py-2 transition-all duration-300 ease-out active:scale-[0.94]",
+                  active
+                    ? "text-primary-foreground shadow-[var(--shadow-soft)]"
+                    : "text-primary/55 hover:text-primary",
                 )}
                 style={active ? { background: "var(--gradient-champagne)" } : undefined}
               >
-                <Icon className="w-5 h-5" strokeWidth={active ? 2 : 1.5} />
+                <Icon className="w-5 h-5" strokeWidth={active ? 2 : 1.75} />
                 <span className="text-[10px] font-medium tracking-wide">{item.label}</span>
               </Link>
             );
