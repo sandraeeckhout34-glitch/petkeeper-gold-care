@@ -265,11 +265,78 @@ export function PetFormDialog({
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{label}</Label>
+      <div className="flex items-baseline justify-between gap-2">
+        <Label className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">{label}</Label>
+        {hint && <span className="text-[11px] text-primary/70 font-medium">{hint}</span>}
+      </div>
       {children}
+    </div>
+  );
+}
+
+function Card({ title, eyebrow, children }: { title: string; eyebrow?: string; children: ReactNode }) {
+  return (
+    <section className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] p-5 space-y-4">
+      <header className="flex items-baseline justify-between">
+        <h3 className="font-display text-[17px] leading-tight text-foreground">{title}</h3>
+        {eyebrow && (
+          <span className="text-[10px] tracking-[0.22em] text-primary/70 font-medium">{eyebrow}</span>
+        )}
+      </header>
+      <div className="space-y-3">{children}</div>
+    </section>
+  );
+}
+
+function ToggleRow({
+  id, label, checked, onCheckedChange,
+}: { id: string; label: string; checked: boolean; onCheckedChange: (v: boolean) => void }) {
+  return (
+    <label
+      htmlFor={id}
+      className="flex items-center justify-between gap-3 rounded-2xl bg-secondary/60 px-4 py-3 cursor-pointer transition-colors hover:bg-secondary"
+    >
+      <span className="text-sm text-foreground">{label}</span>
+      <Checkbox id={id} checked={checked} onCheckedChange={(c) => onCheckedChange(!!c)} />
+    </label>
+  );
+}
+
+function PhotoPicker({
+  file, initialUrl, onChange,
+}: { file: File | null; initialUrl: string | null; onChange: (f: File | null) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const preview = useMemo(() => (file ? URL.createObjectURL(file) : initialUrl), [file, initialUrl]);
+  return (
+    <div className="flex flex-col items-center gap-3 pt-1 pb-2">
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className="group relative w-32 h-32 rounded-full flex items-center justify-center overflow-hidden shadow-[var(--shadow-elevated)] transition-transform active:scale-[0.97]"
+        style={{ background: preview ? undefined : "var(--gradient-champagne)" }}
+        aria-label="Foto kiezen"
+      >
+        {preview ? (
+          <img src={preview} alt="Voorbeeld" className="w-full h-full object-cover" />
+        ) : (
+          <PawPrint className="w-12 h-12 text-primary-foreground" strokeWidth={1.5} />
+        )}
+        <span className="absolute bottom-0 inset-x-0 h-9 flex items-center justify-center gap-1.5 bg-foreground/45 text-[11px] uppercase tracking-[0.15em] text-white backdrop-blur-sm opacity-90">
+          <Camera className="w-3.5 h-3.5" strokeWidth={2} />
+          {preview ? "Wijzig" : "Foto"}
+        </span>
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+      />
+      <p className="text-xs text-muted-foreground">Tik om een foto te uploaden</p>
     </div>
   );
 }
