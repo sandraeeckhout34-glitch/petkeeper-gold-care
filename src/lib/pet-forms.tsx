@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -163,11 +163,14 @@ export function PetFormDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-w-md rounded-3xl">
+      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-md max-h-[92dvh] rounded-3xl flex flex-col gap-4 p-5 sm:p-6">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">{initial?.id ? "Huisdier bewerken" : "Huisdier toevoegen"}</DialogTitle>
+          <DialogDescription className="sr-only">
+            Vul de gegevens van je huisdier in. Alleen naam is verplicht.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
+        <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-5 flex-1 overflow-y-auto pr-1 -mr-1">
           <Section title="Basisgegevens">
             <Field label="Foto">
               <Input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="rounded-xl h-11" />
