@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from "react";
+import { useState, useRef, useMemo, type ReactNode } from "react";
+import { Camera, PawPrint } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -163,100 +164,179 @@ export function PetFormDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-md max-h-[92dvh] rounded-3xl flex flex-col gap-4 p-5 sm:p-6">
-        <DialogHeader>
-          <DialogTitle className="font-display text-2xl">{initial?.id ? "Huisdier bewerken" : "Huisdier toevoegen"}</DialogTitle>
-          <DialogDescription className="sr-only">
-            Vul de gegevens van je huisdier in. Alleen naam is verplicht.
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-md max-h-[95dvh] rounded-3xl flex flex-col gap-0 p-0 overflow-hidden bg-background border-none">
+        <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
+          <DialogTitle className="font-display text-[26px] leading-tight">
+            {initial?.id ? "Huisdier bewerken" : "Nieuw huisdier"}
+          </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            {initial?.id ? "Werk de gegevens bij." : "Vul de gegevens in om te beginnen."}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-5 flex-1 overflow-y-auto pr-1 -mr-1">
-          <Section title="Basisgegevens">
-            <Field label="Foto">
-              <Input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="rounded-xl h-11" />
+
+        <form
+          id="pet-form"
+          onSubmit={(e) => { e.preventDefault(); mut.mutate(); }}
+          className="flex-1 overflow-y-auto px-5 pt-4 pb-6 space-y-5"
+        >
+          {/* Circular photo picker */}
+          <PhotoPicker
+            file={file}
+            initialUrl={initial?.photo_url ?? null}
+            onChange={setFile}
+          />
+
+          <Card title="Basisgegevens" eyebrow="01">
+            <Field label="Naam">
+              <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-xl h-12" placeholder="Bijv. Luna" />
             </Field>
-            <Field label="Naam"><Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-xl h-11" /></Field>
-            <Field label="Soort">
-              <Select value={form.species || undefined} onValueChange={(v) => setForm({ ...form, species: v, breed: "" })}>
-                <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Kies soort" /></SelectTrigger>
-                <SelectContent>
-                  {SPECIES_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Soort">
+                <Select value={form.species || undefined} onValueChange={(v) => setForm({ ...form, species: v, breed: "" })}>
+                  <SelectTrigger className="rounded-xl h-12"><SelectValue placeholder="Kies" /></SelectTrigger>
+                  <SelectContent>
+                    {SPECIES_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label="Geslacht">
+                <Select value={form.gender || undefined} onValueChange={(v) => setForm({ ...form, gender: v })}>
+                  <SelectTrigger className="rounded-xl h-12"><SelectValue placeholder="Kies" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Mannelijk">Mannelijk</SelectItem>
+                    <SelectItem value="Vrouwelijk">Vrouwelijk</SelectItem>
+                    <SelectItem value="Onbekend">Onbekend</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+            </div>
             <Field label="Ras">
               {breedList.length > 0 ? (
                 <Select value={form.breed || undefined} onValueChange={(v) => setForm({ ...form, breed: v })}>
-                  <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Kies ras" /></SelectTrigger>
+                  <SelectTrigger className="rounded-xl h-12"><SelectValue placeholder="Kies ras" /></SelectTrigger>
                   <SelectContent>
                     {breedList.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
                   </SelectContent>
                 </Select>
               ) : (
-                <Input value={form.breed} onChange={(e) => setForm({ ...form, breed: e.target.value })} className="rounded-xl h-11" placeholder="Kies eerst een soort" />
+                <Input value={form.breed} onChange={(e) => setForm({ ...form, breed: e.target.value })} className="rounded-xl h-12" placeholder="Kies eerst een soort" />
               )}
             </Field>
-            <Field label="Geslacht">
-              <Select value={form.gender || undefined} onValueChange={(v) => setForm({ ...form, gender: v })}>
-                <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Kies" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Mannelijk">Mannelijk</SelectItem>
-                  <SelectItem value="Vrouwelijk">Vrouwelijk</SelectItem>
-                  <SelectItem value="Onbekend">Onbekend</SelectItem>
-                </SelectContent>
-              </Select>
+            <Field label="Geboortedatum" hint={age ? `Leeftijd: ${age}` : undefined}>
+              <Input type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} className="rounded-xl h-12" />
             </Field>
-            <Field label="Geboortedatum">
-              <Input type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} className="rounded-xl h-11" />
-            </Field>
-            {age && (
-              <div className="text-xs text-muted-foreground -mt-1">Leeftijd: <span className="text-foreground font-medium">{age}</span></div>
-            )}
-          </Section>
+          </Card>
 
-          <Section title="Fysieke gegevens">
+          <Card title="Fysieke gegevens" eyebrow="02">
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Gewicht (kg)"><Input type="number" step="0.01" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} className="rounded-xl h-11" /></Field>
-              <Field label="Kleur"><Input value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} className="rounded-xl h-11" /></Field>
+              <Field label="Gewicht (kg)"><Input type="number" step="0.01" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} className="rounded-xl h-12" placeholder="0,0" /></Field>
+              <Field label="Kleur"><Input value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} className="rounded-xl h-12" placeholder="Bijv. zwart" /></Field>
             </div>
-            <div className="flex items-center gap-3 py-1">
-              <Checkbox id="neutered" checked={!!form.is_neutered} onCheckedChange={(c) => setForm({ ...form, is_neutered: !!c })} />
-              <Label htmlFor="neutered" className="text-sm">Gecastreerd / Gesteriliseerd</Label>
-            </div>
-            <Field label="Chipnummer"><Input value={form.microchip_number} onChange={(e) => setForm({ ...form, microchip_number: e.target.value })} className="rounded-xl h-11" /></Field>
-            <Field label="Paspoortnummer"><Input value={form.passport_number} onChange={(e) => setForm({ ...form, passport_number: e.target.value })} className="rounded-xl h-11" /></Field>
-          </Section>
+            <Field label="Chipnummer"><Input value={form.microchip_number} onChange={(e) => setForm({ ...form, microchip_number: e.target.value })} className="rounded-xl h-12" /></Field>
+            <Field label="Paspoortnummer"><Input value={form.passport_number} onChange={(e) => setForm({ ...form, passport_number: e.target.value })} className="rounded-xl h-12" /></Field>
+            <ToggleRow id="neutered" label="Gecastreerd / Gesteriliseerd" checked={!!form.is_neutered} onCheckedChange={(c) => setForm({ ...form, is_neutered: c })} />
+          </Card>
 
-          <Section title="Gezondheid">
-            <Field label="Vaste dierenarts"><Input value={form.vet_name} onChange={(e) => setForm({ ...form, vet_name: e.target.value })} className="rounded-xl h-11" placeholder="Praktijknaam" /></Field>
-            <Field label="Allergieën"><Textarea value={form.allergies} onChange={(e) => setForm({ ...form, allergies: e.target.value })} className="rounded-xl" placeholder="Bijv. kip, gluten" /></Field>
-            <Field label="Chronische aandoeningen"><Textarea value={form.chronic_conditions} onChange={(e) => setForm({ ...form, chronic_conditions: e.target.value })} className="rounded-xl" /></Field>
-            <div className="flex items-center gap-3 py-1">
-              <Checkbox id="insured" checked={!!form.is_insured} onCheckedChange={(c) => setForm({ ...form, is_insured: !!c })} />
-              <Label htmlFor="insured" className="text-sm">Verzekerd</Label>
-            </div>
-          </Section>
+          <Card title="Gezondheid" eyebrow="03">
+            <Field label="Vaste dierenarts"><Input value={form.vet_name} onChange={(e) => setForm({ ...form, vet_name: e.target.value })} className="rounded-xl h-12" placeholder="Praktijknaam" /></Field>
+            <Field label="Allergieën"><Textarea value={form.allergies} onChange={(e) => setForm({ ...form, allergies: e.target.value })} className="rounded-xl min-h-[72px]" placeholder="Bijv. kip, gluten" /></Field>
+            <Field label="Chronische aandoeningen"><Textarea value={form.chronic_conditions} onChange={(e) => setForm({ ...form, chronic_conditions: e.target.value })} className="rounded-xl min-h-[72px]" /></Field>
+            <ToggleRow id="insured" label="Verzekerd" checked={!!form.is_insured} onCheckedChange={(c) => setForm({ ...form, is_insured: c })} />
+          </Card>
 
-          <Section title="Extra">
-            <Field label="Notities"><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="rounded-xl" /></Field>
-          </Section>
-
-          <DialogFooter>
-            <Button type="submit" disabled={mut.isPending} className="w-full h-12 rounded-full">
-              {mut.isPending ? "Opslaan…" : "Opslaan"}
-            </Button>
-          </DialogFooter>
+          <Card title="Extra informatie" eyebrow="04">
+            <Field label="Notities"><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="rounded-xl min-h-[96px]" placeholder="Bijzonderheden, karakter…" /></Field>
+          </Card>
         </form>
+
+        {/* Sticky save bar */}
+        <div className="shrink-0 px-5 pt-3 pb-5 border-t border-border bg-card/95 backdrop-blur-sm">
+          <Button
+            type="submit"
+            form="pet-form"
+            disabled={mut.isPending}
+            className="w-full h-12 rounded-full text-[15px]"
+          >
+            {mut.isPending ? "Opslaan…" : initial?.id ? "Wijzigingen opslaan" : "Huisdier opslaan"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{label}</Label>
+      <div className="flex items-baseline justify-between gap-2">
+        <Label className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">{label}</Label>
+        {hint && <span className="text-[11px] text-primary/70 font-medium">{hint}</span>}
+      </div>
       {children}
+    </div>
+  );
+}
+
+function Card({ title, eyebrow, children }: { title: string; eyebrow?: string; children: ReactNode }) {
+  return (
+    <section className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] p-5 space-y-4">
+      <header className="flex items-baseline justify-between">
+        <h3 className="font-display text-[17px] leading-tight text-foreground">{title}</h3>
+        {eyebrow && (
+          <span className="text-[10px] tracking-[0.22em] text-primary/70 font-medium">{eyebrow}</span>
+        )}
+      </header>
+      <div className="space-y-3">{children}</div>
+    </section>
+  );
+}
+
+function ToggleRow({
+  id, label, checked, onCheckedChange,
+}: { id: string; label: string; checked: boolean; onCheckedChange: (v: boolean) => void }) {
+  return (
+    <label
+      htmlFor={id}
+      className="flex items-center justify-between gap-3 rounded-2xl bg-secondary/60 px-4 py-3 cursor-pointer transition-colors hover:bg-secondary"
+    >
+      <span className="text-sm text-foreground">{label}</span>
+      <Checkbox id={id} checked={checked} onCheckedChange={(c) => onCheckedChange(!!c)} />
+    </label>
+  );
+}
+
+function PhotoPicker({
+  file, initialUrl, onChange,
+}: { file: File | null; initialUrl: string | null; onChange: (f: File | null) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const preview = useMemo(() => (file ? URL.createObjectURL(file) : initialUrl), [file, initialUrl]);
+  return (
+    <div className="flex flex-col items-center gap-3 pt-1 pb-2">
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className="group relative w-32 h-32 rounded-full flex items-center justify-center overflow-hidden shadow-[var(--shadow-elevated)] transition-transform active:scale-[0.97]"
+        style={{ background: preview ? undefined : "var(--gradient-champagne)" }}
+        aria-label="Foto kiezen"
+      >
+        {preview ? (
+          <img src={preview} alt="Voorbeeld" className="w-full h-full object-cover" />
+        ) : (
+          <PawPrint className="w-12 h-12 text-primary-foreground" strokeWidth={1.5} />
+        )}
+        <span className="absolute bottom-0 inset-x-0 h-9 flex items-center justify-center gap-1.5 bg-foreground/45 text-[11px] uppercase tracking-[0.15em] text-white backdrop-blur-sm opacity-90">
+          <Camera className="w-3.5 h-3.5" strokeWidth={2} />
+          {preview ? "Wijzig" : "Foto"}
+        </span>
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+      />
+      <p className="text-xs text-muted-foreground">Tik om een foto te uploaden</p>
     </div>
   );
 }
