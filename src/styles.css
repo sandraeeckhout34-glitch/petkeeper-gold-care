@@ -75,7 +75,7 @@
   --secondary: #f1ead9;
   --secondary-foreground: #4e6b3a;
   --muted: #f1ead9;
-  --muted-foreground: #7a6b58;
+  --muted-foreground: #6a5a48;
   --accent: #c9a25b;
   --accent-foreground: #ffffff;
   --destructive: #b45549;
@@ -108,10 +108,71 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   h1, h2, h3, .font-display {
     font-family: var(--font-serif);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
+    font-weight: 500;
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 25%, transparent);
+    border-radius: 8px;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 22%, transparent);
+    color: var(--foreground);
+  }
+}
+
+/* ---------- Motion & micro-interactions ---------- */
+
+@keyframes pk-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pk-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@utility animate-fade-up {
+  animation: pk-fade-up 0.35s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@utility shimmer {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--muted) 60%, transparent) 0%,
+    color-mix(in oklab, var(--card) 85%, transparent) 50%,
+    color-mix(in oklab, var(--muted) 60%, transparent) 100%
+  );
+  background-size: 800px 100%;
+  animation: pk-shimmer 1.6s linear infinite;
+}
+
+@utility hover-lift {
+  transition: transform 0.25s cubic-bezier(0.22, 0.61, 0.36, 1),
+              box-shadow 0.25s cubic-bezier(0.22, 0.61, 0.36, 1);
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elevated);
+  }
+  &:active {
+    transform: translateY(0);
+    transition-duration: 0.1s;
+  }
+}
+
+@utility press {
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  &:active {
+    transform: scale(0.97);
   }
 }
