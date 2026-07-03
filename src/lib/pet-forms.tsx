@@ -373,12 +373,15 @@ export function SubRecordDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-w-md rounded-3xl">
-        <DialogHeader><DialogTitle className="font-display text-2xl">{title}</DialogTitle></DialogHeader>
+      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-md max-h-[92dvh] rounded-3xl flex flex-col gap-4 p-5 sm:p-6">
+        <DialogHeader>
+          <DialogTitle className="font-display text-2xl">{title}</DialogTitle>
+          <DialogDescription className="sr-only">Vul de gegevens in en druk op Opslaan.</DialogDescription>
+        </DialogHeader>
         {noPets ? (
           <p className="text-sm text-muted-foreground py-4">Voeg eerst een huisdier toe om verder te gaan.</p>
         ) : (
-          <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+          <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-3 flex-1 overflow-y-auto pr-1 -mr-1">
             {pets && pets.length > 0 && (
               <Field label="Huisdier">
                 <Select value={selectedPet || undefined} onValueChange={setSelectedPet}>
