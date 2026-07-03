@@ -82,7 +82,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "PetKeeper — Luxury Pet Management" },
       { name: "description", content: "PetKeeper is the elegant way to care for your pets: track pets, appointments, medications, vaccinations, documents and reminders." },
       { name: "author", content: "PetKeeper" },
-      { name: "theme-color", content: "#0b1220" },
+      { name: "theme-color", content: "#4e6b3a" },
       { name: "application-name", content: "PetKeeper" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "PetKeeper" },
@@ -110,7 +110,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" } as any,
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap",
       },
     ],
   }),
