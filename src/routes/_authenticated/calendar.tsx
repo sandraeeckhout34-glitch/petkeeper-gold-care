@@ -41,8 +41,8 @@ function CalendarPage() {
     enabled: !!day,
     queryFn: async () => {
       const [a, r, m, v] = await Promise.all([
-        supabase.from("appointments").select("*, pets(name,status,deleted_at)").eq("date", day).order("time"),
-        supabase.from("reminders").select("*, pets(name,status,deleted_at)").eq("date", day),
+        supabase.from("appointments").select("*, pets(name,status,deleted_at)").eq("date", day).order("time", { ascending: true, nullsFirst: false }),
+        supabase.from("reminders").select("*, pets(name,status,deleted_at)").eq("date", day).order("time", { ascending: true, nullsFirst: false }),
         supabase.from("medications").select("*, pets(name,status,deleted_at)").lte("start_date", day).or(`end_date.is.null,end_date.gte.${day}`),
         supabase.from("vaccinations").select("*, pets(name,status,deleted_at)").eq("next_due_date", day),
       ]);
@@ -149,7 +149,9 @@ function AddAppointmentDialog({
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries();
+      qc.invalidateQueries({ queryKey: ["calendar"] });
+      qc.invalidateQueries({ queryKey: ["appointments"] });
+      qc.invalidateQueries({ queryKey: ["home"] });
       toast.success("Afspraak toegevoegd");
       setOpen(false);
       setForm({ pet_id: "", type: "", custom_title: "", date: defaultDate, time: "", location: "", provider: "", notes: "" });
