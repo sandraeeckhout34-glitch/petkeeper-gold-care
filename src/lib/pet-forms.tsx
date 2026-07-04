@@ -1,5 +1,7 @@
 import { useState, useRef, useMemo, type ReactNode } from "react";
-import { Camera, PawPrint } from "lucide-react";
+import {
+  Camera, PawPrint, User, Ruler, HeartPulse, Sparkles,
+} from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -177,16 +179,18 @@ export function PetFormDialog({
         <form
           id="pet-form"
           onSubmit={(e) => { e.preventDefault(); mut.mutate(); }}
-          className="flex-1 overflow-y-auto px-5 pt-4 pb-6 space-y-5"
+          className="flex-1 overflow-y-auto px-5 pt-3 pb-6 space-y-6"
         >
           {/* Circular photo picker */}
           <PhotoPicker
             file={file}
             initialUrl={initial?.photo_url ?? null}
             onChange={setFile}
+            name={form.name}
+            species={form.species}
           />
 
-          <Card title="Basisgegevens" eyebrow="01">
+          <Card title="Basisgegevens" eyebrow="01" icon={User}>
             <Field label="Naam">
               <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-xl h-12" placeholder="Bijv. Luna" />
             </Field>
@@ -227,24 +231,24 @@ export function PetFormDialog({
             </Field>
           </Card>
 
-          <Card title="Fysieke gegevens" eyebrow="02">
+          <Card title="Fysieke gegevens" eyebrow="02" icon={Ruler}>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Gewicht (kg)"><Input type="number" step="0.01" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} className="rounded-xl h-12" placeholder="0,0" /></Field>
               <Field label="Kleur"><Input value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} className="rounded-xl h-12" placeholder="Bijv. zwart" /></Field>
             </div>
             <Field label="Chipnummer"><Input value={form.microchip_number} onChange={(e) => setForm({ ...form, microchip_number: e.target.value })} className="rounded-xl h-12" /></Field>
             <Field label="Paspoortnummer"><Input value={form.passport_number} onChange={(e) => setForm({ ...form, passport_number: e.target.value })} className="rounded-xl h-12" /></Field>
-            <ToggleRow id="neutered" label="Gecastreerd / Gesteriliseerd" checked={!!form.is_neutered} onCheckedChange={(c) => setForm({ ...form, is_neutered: c })} />
           </Card>
 
-          <Card title="Gezondheid" eyebrow="03">
+          <Card title="Gezondheid" eyebrow="03" icon={HeartPulse}>
             <Field label="Vaste dierenarts"><Input value={form.vet_name} onChange={(e) => setForm({ ...form, vet_name: e.target.value })} className="rounded-xl h-12" placeholder="Praktijknaam" /></Field>
             <Field label="Allergieën"><Textarea value={form.allergies} onChange={(e) => setForm({ ...form, allergies: e.target.value })} className="rounded-xl min-h-[72px]" placeholder="Bijv. kip, gluten" /></Field>
             <Field label="Chronische aandoeningen"><Textarea value={form.chronic_conditions} onChange={(e) => setForm({ ...form, chronic_conditions: e.target.value })} className="rounded-xl min-h-[72px]" /></Field>
-            <ToggleRow id="insured" label="Verzekerd" checked={!!form.is_insured} onCheckedChange={(c) => setForm({ ...form, is_insured: c })} />
+            <ToggleRow id="neutered" label="Gecastreerd / Gesteriliseerd" checked={!!form.is_neutered} onCheckedChange={(c) => setForm({ ...form, is_neutered: c })} />
           </Card>
 
-          <Card title="Extra informatie" eyebrow="04">
+          <Card title="Extra" eyebrow="04" icon={Sparkles}>
+            <ToggleRow id="insured" label="Verzekerd" checked={!!form.is_insured} onCheckedChange={(c) => setForm({ ...form, is_insured: c })} />
             <Field label="Notities"><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="rounded-xl min-h-[96px]" placeholder="Bijzonderheden, karakter…" /></Field>
           </Card>
         </form>
@@ -277,13 +281,30 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   );
 }
 
-function Card({ title, eyebrow, children }: { title: string; eyebrow?: string; children: ReactNode }) {
+function Card({
+  title, eyebrow, icon: Icon, children,
+}: {
+  title: string;
+  eyebrow?: string;
+  icon?: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  children: ReactNode;
+}) {
   return (
     <section className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] p-5 space-y-4">
-      <header className="flex items-baseline justify-between">
-        <h3 className="font-display text-[17px] leading-tight text-foreground">{title}</h3>
+      <header className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          {Icon && (
+            <span
+              className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+              style={{ background: "var(--gradient-champagne)" }}
+            >
+              <Icon className="w-[18px] h-[18px] text-primary-foreground" strokeWidth={1.75} />
+            </span>
+          )}
+          <h3 className="font-display text-[17px] leading-tight text-foreground truncate">{title}</h3>
+        </div>
         {eyebrow && (
-          <span className="text-[10px] tracking-[0.22em] text-primary/70 font-medium">{eyebrow}</span>
+          <span className="text-[10px] tracking-[0.22em] text-primary/70 font-medium shrink-0">{eyebrow}</span>
         )}
       </header>
       <div className="space-y-3">{children}</div>
@@ -306,25 +327,32 @@ function ToggleRow({
 }
 
 function PhotoPicker({
-  file, initialUrl, onChange,
-}: { file: File | null; initialUrl: string | null; onChange: (f: File | null) => void }) {
+  file, initialUrl, onChange, name, species,
+}: {
+  file: File | null;
+  initialUrl: string | null;
+  onChange: (f: File | null) => void;
+  name?: string;
+  species?: string;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const preview = useMemo(() => (file ? URL.createObjectURL(file) : initialUrl), [file, initialUrl]);
+  const displayName = (name ?? "").trim();
   return (
-    <div className="flex flex-col items-center gap-3 pt-1 pb-2">
+    <div className="flex flex-col items-center gap-3 pt-1 pb-1">
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="group relative w-32 h-32 rounded-full flex items-center justify-center overflow-hidden shadow-[var(--shadow-elevated)] transition-transform active:scale-[0.97]"
+        className="group relative w-36 h-36 rounded-full flex items-center justify-center overflow-hidden shadow-[var(--shadow-elevated)] transition-transform active:scale-[0.97] ring-4 ring-card"
         style={{ background: preview ? undefined : "var(--gradient-champagne)" }}
         aria-label="Foto kiezen"
       >
         {preview ? (
           <img src={preview} alt="Voorbeeld" className="w-full h-full object-cover" />
         ) : (
-          <PawPrint className="w-12 h-12 text-primary-foreground" strokeWidth={1.5} />
+          <PawPrint className="w-14 h-14 text-primary-foreground" strokeWidth={1.5} />
         )}
-        <span className="absolute bottom-0 inset-x-0 h-9 flex items-center justify-center gap-1.5 bg-foreground/45 text-[11px] uppercase tracking-[0.15em] text-white backdrop-blur-sm opacity-90">
+        <span className="absolute bottom-0 inset-x-0 h-9 flex items-center justify-center gap-1.5 bg-foreground/45 text-[11px] uppercase tracking-[0.15em] text-primary-foreground backdrop-blur-sm">
           <Camera className="w-3.5 h-3.5" strokeWidth={2} />
           {preview ? "Wijzig" : "Foto"}
         </span>
@@ -336,7 +364,14 @@ function PhotoPicker({
         className="hidden"
         onChange={(e) => onChange(e.target.files?.[0] ?? null)}
       />
-      <p className="text-xs text-muted-foreground">Tik om een foto te uploaden</p>
+      {displayName ? (
+        <div className="text-center">
+          <div className="font-display text-[22px] leading-tight text-foreground">{displayName}</div>
+          {species && <div className="text-xs text-muted-foreground mt-0.5">{species}</div>}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">Tik om een foto te uploaden</p>
+      )}
     </div>
   );
 }
