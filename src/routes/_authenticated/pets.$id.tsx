@@ -34,11 +34,7 @@ function PetDetail() {
   const [restoreOpen, setRestoreOpen] = useState(false);
   const [deceasedDate, setDeceasedDate] = useState("");
   const [memorialNote, setMemorialNote] = useState("");
-  const [deleteConfirm, setDeleteConfirm] = useState("");
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const editTriggerRef = useRef<HTMLButtonElement>(null);
-  const deleteInputRef = useRef<HTMLInputElement>(null);
 
   const { data: pet, isLoading } = useQuery({
     queryKey: ["pet", id],
@@ -49,15 +45,25 @@ function PetDetail() {
     },
   });
 
-  const del = useMutation({
+  const deletePet = useMutation({
     mutationFn: async () => {
-      const deletedAt = new Date().toISOString();
-      const { error } = await supabase
-        .from("pets")
-        .update({ status: "deleted", deleted_at: deletedAt, updated_at: deletedAt } as any)
-        .eq("id", id);
+      const childTables = ["appointments", "vaccinations", "medications", "documents", "expenses"] as const;
+      for (const table of childTables) {
+        const { error } = await supabase.from(table).delete().eq("pet_id", id);
+        if (error) throw error;
+      }
+
+      const { error } = await supabase.from("pets").delete().eq("id", id);
       if (error) throw error;
     },
+    onSuccess: async () => {
+      setDeleteOpen(false);
+      qc.removeQueries({ queryKey: ["pet", id] });
+      await qc.invalidateQueries();
+      toast.success("Pet successfully deleted.");
+      navigate({ to: "/pets" });
+    },
+    onError: (e: any) => toast.error(e.message),
   });
 
   const archive = useMutation({
@@ -114,42 +120,6 @@ function PetDetail() {
 
   const status = (pet as any).status ?? "active";
   const isArchived = status !== "active";
-  const isDeleteBusy = del.isPending || deleteSubmitting;
-  const handlePermanentDelete = async (form?: HTMLFormElement | null) => {
-    if (isDeleteBusy) return;
-
-    const formConfirmation = form ? String(new FormData(form).get("deleteConfirmation") ?? "") : "";
-    const typedConfirmation = formConfirmation || deleteInputRef.current?.value || deleteConfirm;
-    const confirmed = typedConfirmation.trim().toUpperCase() === "DELETE";
-    console.log("[PetKeeper] Permanent verwijderen knop geklikt", { petId: id, status, confirmed });
-    setDeleteError(null);
-
-    if (!confirmed) {
-      const message = "Typ DELETE om permanent verwijderen te bevestigen.";
-      setDeleteError(message);
-      toast.error(message);
-      return;
-    }
-
-    setDeleteSubmitting(true);
-    try {
-      await del.mutateAsync();
-      console.log("[PetKeeper] Permanent verwijderen uitgevoerd", { petId: id, status: "deleted" });
-      setDeleteOpen(false);
-      setDeleteConfirm("");
-      qc.removeQueries({ queryKey: ["pet", id] });
-      await qc.invalidateQueries();
-      toast.success("Huisdier permanent verwijderd.");
-      navigate({ to: "/home" });
-    } catch (error: any) {
-      console.error("[PetKeeper] Permanent verwijderen mislukt", error);
-      const message = error?.message || "Permanent verwijderen is mislukt.";
-      setDeleteError(message);
-      toast.error(message);
-    } finally {
-      setDeleteSubmitting(false);
-    }
-  };
 
   return (
     <>
@@ -201,6 +171,9 @@ function PetDetail() {
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setArchiveOpen(true)}>
                     <Archive className="w-4 h-4 mr-2" /> 📦 Huisdier archiveren
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setDeleteOpen(true)} className="text-destructive focus:text-destructive">
+                    <Trash2 className="w-4 h-4 mr-2" /> 🗑 Delete Pet
                   </DropdownMenuItem>
                 </>
               )}
@@ -256,6 +229,31 @@ function PetDetail() {
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-full">Annuleren</AlertDialogCancel>
             <AlertDialogAction onClick={() => archive.mutate()} className="rounded-full">Archiveren</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete */}
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent className="rounded-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Pet</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete this pet? This will also delete all appointments, vaccinations, medications, documents and expenses linked to this pet.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                deletePet.mutate();
+              }}
+              disabled={deletePet.isPending}
+              className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletePet.isPending ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
