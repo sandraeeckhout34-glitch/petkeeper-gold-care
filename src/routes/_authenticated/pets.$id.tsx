@@ -492,6 +492,7 @@ function UploadDocDialog({ petId }: { petId: string }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
+  const [type, setType] = useState("");
   const [date, setDate] = useState("");
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -507,14 +508,14 @@ function UploadDocDialog({ petId }: { petId: string }) {
         if (up.error) throw up.error;
       }
       const { error } = await supabase.from("documents").insert({
-        user_id: uid, pet_id: petId, title, date: date || null, notes: notes || null, file_path,
+        user_id: uid, pet_id: petId, title, type: type || null, date: date || null, notes: notes || null, file_path,
       });
       if (error) throw error;
     },
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["documents", petId], refetchType: "all" });
       toast.success("Document geüpload");
-      setOpen(false); setTitle(""); setDate(""); setNotes(""); setFile(null);
+      setOpen(false); setTitle(""); setType(""); setDate(""); setNotes(""); setFile(null);
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -527,6 +528,8 @@ function UploadDocDialog({ petId }: { petId: string }) {
         <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-3">
           <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Titel</Label>
             <Input required value={title} onChange={(e) => setTitle(e.target.value)} className="rounded-xl h-11" /></div>
+          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Type</Label>
+            <Input value={type} onChange={(e) => setType(e.target.value)} placeholder="Bijv. Paspoort, Factuur" className="rounded-xl h-11" /></div>
           <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Bestand</Label>
             <Input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="rounded-xl h-11" /></div>
           <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Datum</Label>
@@ -536,6 +539,52 @@ function UploadDocDialog({ petId }: { petId: string }) {
           <DialogFooter>
             <Button type="submit" disabled={mut.isPending} className="w-full h-12 rounded-full">
               {mut.isPending ? "Uploaden…" : "Uploaden"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditDocDialog({ petId, row, onClose }: { petId: string; row: any; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [title, setTitle] = useState(row.title ?? "");
+  const [type, setType] = useState(row.type ?? "");
+  const [date, setDate] = useState(row.date ?? "");
+  const [notes, setNotes] = useState(row.notes ?? "");
+
+  const mut = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("documents").update({
+        title, type: type || null, date: date || null, notes: notes || null,
+      }).eq("id", row.id);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["documents", petId], refetchType: "all" });
+      toast.success("Document bijgewerkt");
+      onClose();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="rounded-3xl max-w-md">
+        <DialogHeader><DialogTitle className="font-display text-2xl">Document bewerken</DialogTitle></DialogHeader>
+        <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-3">
+          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Titel</Label>
+            <Input required value={title} onChange={(e) => setTitle(e.target.value)} className="rounded-xl h-11" /></div>
+          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Type</Label>
+            <Input value={type} onChange={(e) => setType(e.target.value)} className="rounded-xl h-11" /></div>
+          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Datum</Label>
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="rounded-xl h-11" /></div>
+          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Notities</Label>
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="rounded-xl" /></div>
+          <DialogFooter>
+            <Button type="submit" disabled={mut.isPending} className="w-full h-12 rounded-full">
+              {mut.isPending ? "Opslaan…" : "Opslaan"}
             </Button>
           </DialogFooter>
         </form>
