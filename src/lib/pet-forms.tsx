@@ -1,9 +1,10 @@
 import { useState, useRef, useMemo, type ReactNode } from "react";
 import {
-  Camera, PawPrint, User, Ruler, HeartPulse, Sparkles,
+  Camera, PawPrint, User, Ruler, HeartPulse, Sparkles, Trash2,
 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,10 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 /* --------- Pet form dialog ---------- */
 
@@ -90,6 +95,8 @@ export function PetFormDialog({
 }) {
   const [open, setOpen] = useState(false);
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [form, setForm] = useState({
     name: initial?.name ?? "",
     species: initial?.species ?? "",
@@ -156,6 +163,28 @@ export function PetFormDialog({
       toast.success(initial?.id ? "Huisdier bijgewerkt" : "Huisdier toegevoegd");
       setOpen(false);
       onSaved?.(id);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deletePet = useMutation({
+    mutationFn: async () => {
+      if (!initial?.id) throw new Error("Geen huisdier geselecteerd");
+      const petId = initial.id;
+      const childTables = ["appointments", "vaccinations", "medications", "documents", "expenses"] as const;
+      for (const t of childTables) {
+        const { error } = await supabase.from(t).delete().eq("pet_id", petId);
+        if (error) throw error;
+      }
+      const { error } = await supabase.from("pets").delete().eq("id", petId);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await qc.invalidateQueries();
+      toast.success("Pet successfully deleted.");
+      setConfirmDelete(false);
+      setOpen(false);
+      navigate({ to: "/pets" });
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -263,8 +292,40 @@ export function PetFormDialog({
           >
             {mut.isPending ? "Opslaan…" : initial?.id ? "Wijzigingen opslaan" : "Huisdier opslaan"}
           </Button>
+          {initial?.id && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setConfirmDelete(true)}
+              disabled={deletePet.isPending}
+              className="w-full h-11 rounded-full mt-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="w-4 h-4 mr-1.5" />
+              Delete Pet
+            </Button>
+          )}
         </div>
       </DialogContent>
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent className="rounded-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display">Are you sure you want to permanently delete this pet?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will also delete all appointments, vaccinations, medications, documents and expenses linked to this pet.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-full" disabled={deletePet.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); deletePet.mutate(); }}
+              disabled={deletePet.isPending}
+              className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletePet.isPending ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
