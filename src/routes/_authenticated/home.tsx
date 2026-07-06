@@ -79,6 +79,20 @@ function HomePage() {
     },
   });
 
+  const upcoming = useQuery({
+    queryKey: ["appointments", "upcoming", today],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("appointments")
+        .select("*, pets(name,status,deleted_at)")
+        .gt("date", today)
+        .order("date", { ascending: true })
+        .order("time", { ascending: true, nullsFirst: false })
+        .limit(5);
+      return (data ?? []).filter(isVisiblePetRecord);
+    },
+  });
+
   const meds = useQuery({
     queryKey: ["medications", "active"],
     queryFn: async () => {
@@ -156,6 +170,14 @@ function HomePage() {
         <Row primary={a.title} secondary={`${a.pets?.name ?? ""} • ${formatTime(a.time)}`} />
       )} empty="Geen afspraken vandaag" />
 
+      <SectionHeader title="Komende afspraken" to="/calendar" />
+      <ListCard items={upcoming.data ?? []} render={(a) => (
+        <Row
+          primary={`${format(parseDateOnly(a.date), "EEE d MMM", { locale: nl })} • ${formatTime(a.time)}`}
+          secondary={`${a.pets?.name ?? ""} • ${a.title}${a.location ? ` • ${a.location}` : ""}`}
+        />
+      )} empty="Geen komende afspraken" />
+
       <SectionHeader title="Medicatie Vandaag" />
       <ListCard items={meds.data ?? []} render={(m) => (
         <Row primary={m.name} secondary={`${m.pets?.name ?? ""} • ${m.dosage ?? ""} ${m.frequency ?? ""}`} />
@@ -180,6 +202,11 @@ function HomePage() {
 
 function isVisiblePetRecord(row: any) {
   return !row.pet_id || (!!row.pets && row.pets.status !== "deleted" && !row.pets.deleted_at);
+}
+
+function parseDateOnly(value: string) {
+  const [year, month, date] = value.split("-").map(Number);
+  return new Date(year, month - 1, date);
 }
 
 const QAction = React.forwardRef<HTMLButtonElement, any>(function QAction({ icon: Icon, label, ...props }, ref) {

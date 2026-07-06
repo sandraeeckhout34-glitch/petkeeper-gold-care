@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Calendar as CalendarIcon, Pill, Syringe, Bell, Plus } from "lucide-react";
 import { format } from "date-fns";
+import { nl } from "date-fns/locale";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/_authenticated/calendar")({
 function CalendarPage() {
   const [selected, setSelected] = useState<Date | undefined>(new Date());
   const day = selected ? format(selected, "yyyy-MM-dd") : "";
+  const today = format(new Date(), "yyyy-MM-dd");
 
   const pets = useQuery({
     queryKey: ["pets"],
@@ -53,6 +55,19 @@ function CalendarPage() {
         medications: visible(m.data),
         vaccinations: visible(v.data),
       };
+    },
+  });
+
+  const upcoming = useQuery({
+    queryKey: ["appointments", "upcoming", today],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("appointments")
+        .select("*, pets(name,status,deleted_at)")
+        .gte("date", today)
+        .order("date", { ascending: true })
+        .order("time", { ascending: true, nullsFirst: false });
+      return (data ?? []).filter(isVisiblePetRecord);
     },
   });
 
@@ -86,8 +101,56 @@ function CalendarPage() {
       <Section icon={Pill} title="Medicatie" items={events?.medications ?? []} empty="Geen medicatie" render={(m: any) => `${m.name} • ${m.pets?.name ?? ""} ${m.dosage ?? ""}`} />
       <Section icon={Syringe} title="Vaccinaties" items={events?.vaccinations ?? []} empty="Geen vaccinaties" render={(v: any) => `${v.vaccine} • ${v.pets?.name ?? ""}`} />
       <Section icon={Bell} title="Herinneringen" items={events?.reminders ?? []} empty="Geen herinneringen" render={(r: any) => `${r.title} • ${(r.time ?? "").slice(0,5)}`} />
+      <UpcomingAppointments items={upcoming.data ?? []} />
     </>
   );
+}
+
+function UpcomingAppointments({ items }: { items: any[] }) {
+  const groups = groupByDate(items);
+  return (
+    <div className="mb-8">
+      <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+        <CalendarIcon className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+        <span className="text-xs uppercase tracking-wider truncate">Alle komende afspraken</span>
+      </div>
+      {groups.length === 0 ? (
+        <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] px-5 py-4 text-sm text-muted-foreground text-center">
+          Geen komende afspraken
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {groups.map(([date, rows]) => (
+            <div key={date} className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] overflow-hidden">
+              <div className="px-5 py-2 bg-muted/40 text-xs font-medium capitalize">
+                {format(parseDateOnly(date), "EEEE d MMMM", { locale: nl })}
+              </div>
+              <div className="divide-y divide-border">
+                {rows.map((a: any) => (
+                  <div key={a.id} className="px-5 py-3 text-sm">
+                    <div className="font-medium">{formatAppointmentTime(a.time)} — {a.title}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {a.pets?.name ?? ""}{a.location ? ` • ${a.location}` : ""}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function groupByDate(items: any[]): [string, any[]][] {
+  const map = new Map<string, any[]>();
+  for (const it of items) {
+    const key = it.date;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(it);
+  }
+  return Array.from(map.entries());
 }
 
 function isVisiblePetRecord(row: any) {
