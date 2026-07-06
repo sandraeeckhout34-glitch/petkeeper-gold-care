@@ -279,14 +279,16 @@ function PetDetail() {
       </AlertDialog>
 
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="w-full rounded-full bg-card border border-border p-1 h-11 grid grid-cols-6">
-          <TabsTrigger value="info" className="rounded-full text-[11px]">Overzicht</TabsTrigger>
-          <TabsTrigger value="app" className="rounded-full text-[11px]">Afspraken</TabsTrigger>
-          <TabsTrigger value="med" className="rounded-full text-[11px]">Medicatie</TabsTrigger>
-          <TabsTrigger value="vac" className="rounded-full text-[11px]">Vaccinaties</TabsTrigger>
-          <TabsTrigger value="doc" className="rounded-full text-[11px]">Documenten</TabsTrigger>
-          <TabsTrigger value="exp" className="rounded-full text-[11px]">Kosten</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-1 px-1">
+          <TabsList className="inline-flex w-max rounded-full bg-card border border-border p-1 h-11 gap-1">
+            <TabsTrigger value="info" className="rounded-full text-xs px-3">Overzicht</TabsTrigger>
+            <TabsTrigger value="app" className="rounded-full text-xs px-3">Afspraken</TabsTrigger>
+            <TabsTrigger value="med" className="rounded-full text-xs px-3">Medicatie</TabsTrigger>
+            <TabsTrigger value="vac" className="rounded-full text-xs px-3">Vaccinaties</TabsTrigger>
+            <TabsTrigger value="doc" className="rounded-full text-xs px-3">Documenten</TabsTrigger>
+            <TabsTrigger value="exp" className="rounded-full text-xs px-3">Kosten</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="info" className="mt-5" id="info">
           <InfoList pet={pet} />
