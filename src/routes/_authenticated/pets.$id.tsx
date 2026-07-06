@@ -423,13 +423,15 @@ function SubList({
 
 function DocsList({ petId }: { petId: string }) {
   const qc = useQueryClient();
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["documents", petId],
     queryFn: async () => {
       const { data, error } = await supabase.from("documents").select("*").eq("pet_id", petId).order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const del = useMutation({
@@ -453,7 +455,9 @@ function DocsList({ petId }: { petId: string }) {
         <h3 className="font-display text-lg">Documenten</h3>
         <UploadDocDialog petId={petId} />
       </div>
-      {!data || data.length === 0 ? (
+      {isLoading ? (
+        <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] py-8 text-center text-sm text-muted-foreground">Documenten laden…</div>
+      ) : !data || data.length === 0 ? (
         <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] py-8 text-center text-sm text-muted-foreground">Nog geen documenten</div>
       ) : (
         <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] divide-y divide-border overflow-hidden">
@@ -495,8 +499,8 @@ function UploadDocDialog({ petId }: { petId: string }) {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["documents", petId] });
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["documents", petId], refetchType: "all" });
       toast.success("Document geüpload");
       setOpen(false); setTitle(""); setDate(""); setNotes(""); setFile(null);
     },
