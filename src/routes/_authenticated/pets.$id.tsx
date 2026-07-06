@@ -425,6 +425,7 @@ function SubList({
 
 function DocsList({ petId }: { petId: string }) {
   const qc = useQueryClient();
+  const [editRow, setEditRow] = useState<any | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ["documents", petId],
     queryFn: async () => {
@@ -460,20 +461,29 @@ function DocsList({ petId }: { petId: string }) {
       {isLoading ? (
         <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] py-8 text-center text-sm text-muted-foreground">Documenten laden…</div>
       ) : !data || data.length === 0 ? (
-        <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] py-8 text-center text-sm text-muted-foreground">Nog geen documenten</div>
+        <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] py-8 text-center text-sm text-muted-foreground">Nog geen documenten toegevoegd.</div>
       ) : (
-        <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] divide-y divide-border overflow-hidden">
-          {data.map((r) => (
-            <div key={r.id} className="px-5 py-4 flex items-start justify-between gap-3">
-              <button className="text-left min-w-0 flex-1" onClick={() => openDoc(r)}>
+        <div className="space-y-3">
+          {data.map((r: any) => (
+            <div key={r.id} className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] p-4">
+              <div className="min-w-0">
                 <div className="text-sm font-medium truncate">{r.title}</div>
-                <div className="text-xs text-muted-foreground truncate">{r.date || ""} {r.notes ? `• ${r.notes}` : ""}</div>
-              </button>
-              <ConfirmDelete onConfirm={() => del.mutate(r)} title="Document verwijderen?" />
+                <div className="text-xs text-muted-foreground truncate mt-0.5">
+                  {r.type ? <span className="uppercase tracking-wider">{r.type}</span> : <span className="uppercase tracking-wider">Document</span>}
+                  {r.date ? <> · {r.date}</> : null}
+                </div>
+                {r.notes ? <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{r.notes}</div> : null}
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <Button size="sm" variant="outline" className="rounded-full h-9" disabled={!r.file_path} onClick={() => openDoc(r)}>Openen</Button>
+                <Button size="sm" variant="outline" className="rounded-full h-9" onClick={() => setEditRow(r)}><Pencil className="w-4 h-4 mr-1" />Bewerken</Button>
+                <div className="ml-auto"><ConfirmDelete onConfirm={() => del.mutate(r)} title="Document verwijderen?" /></div>
+              </div>
             </div>
           ))}
         </div>
       )}
+      {editRow ? <EditDocDialog petId={petId} row={editRow} onClose={() => setEditRow(null)} /> : null}
     </div>
   );
 }
