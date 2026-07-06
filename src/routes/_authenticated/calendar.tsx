@@ -137,11 +137,12 @@ function Section({ icon: Icon, title, countLabel, items, render, empty }: any) {
 }
 
 function AddAppointmentDialog({
-  trigger, defaultDate, pets,
+  trigger, defaultDate, pets, onSaved,
 }: {
   trigger: React.ReactNode;
   defaultDate: string;
   pets: { id: string; name: string }[];
+  onSaved?: (savedDate: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const qc = useQueryClient();
@@ -182,6 +183,7 @@ function AddAppointmentDialog({
       qc.invalidateQueries({ queryKey: ["calendar"] });
       qc.invalidateQueries({ queryKey: ["appointments"] });
       qc.invalidateQueries({ queryKey: ["home"] });
+      onSaved?.(form.date);
       toast.success("Afspraak toegevoegd");
       setOpen(false);
       setForm({ pet_id: "", type: "", custom_title: "", date: defaultDate, time: "", location: "", provider: "", notes: "" });
