@@ -48,7 +48,7 @@ function CalendarPage() {
       ]);
       const visible = (rows: any[] | null) => (rows ?? []).filter(isVisiblePetRecord);
       return {
-        appointments: visible(a.data),
+        appointments: sortByTime(visible(a.data)),
         reminders: visible(r.data),
         medications: visible(m.data),
         vaccinations: visible(v.data),
@@ -67,6 +67,7 @@ function CalendarPage() {
         <AddAppointmentDialog
           defaultDate={day}
           pets={pets.data ?? []}
+          onSaved={(savedDate) => setSelected(parseDateOnly(savedDate))}
           trigger={
             <Button size="sm" className="rounded-full h-9 px-4 gap-1.5 shrink-0">
               <Plus className="w-4 h-4" /> Afspraak toevoegen
@@ -74,7 +75,14 @@ function CalendarPage() {
           }
         />
       </div>
-      <Section icon={CalendarIcon} title="Afspraken" items={events?.appointments ?? []} empty="Geen afspraken" render={(a: any) => `${a.title} • ${a.pets?.name ?? ""} ${(a.time ?? "").slice(0,5)}`} />
+      <Section
+        icon={CalendarIcon}
+        title="Afspraken"
+        countLabel={`${events?.appointments?.length ?? 0} afspraken op deze datum`}
+        items={events?.appointments ?? []}
+        empty="Geen afspraken"
+        render={(a: any) => `${formatAppointmentTime(a.time)} - ${a.title}`}
+      />
       <Section icon={Pill} title="Medicatie" items={events?.medications ?? []} empty="Geen medicatie" render={(m: any) => `${m.name} • ${m.pets?.name ?? ""} ${m.dosage ?? ""}`} />
       <Section icon={Syringe} title="Vaccinaties" items={events?.vaccinations ?? []} empty="Geen vaccinaties" render={(v: any) => `${v.vaccine} • ${v.pets?.name ?? ""}`} />
       <Section icon={Bell} title="Herinneringen" items={events?.reminders ?? []} empty="Geen herinneringen" render={(r: any) => `${r.title} • ${(r.time ?? "").slice(0,5)}`} />
@@ -86,12 +94,34 @@ function isVisiblePetRecord(row: any) {
   return !row.pet_id || (!!row.pets && row.pets.status !== "deleted" && !row.pets.deleted_at);
 }
 
-function Section({ icon: Icon, title, items, render, empty }: any) {
+function sortByTime(items: any[]) {
+  return [...items].sort((left, right) => {
+    const leftTime = left.time ?? "99:99:99";
+    const rightTime = right.time ?? "99:99:99";
+    const byTime = leftTime.localeCompare(rightTime);
+    if (byTime !== 0) return byTime;
+    return String(left.created_at ?? "").localeCompare(String(right.created_at ?? ""));
+  });
+}
+
+function formatAppointmentTime(time: string | null | undefined) {
+  return time ? time.slice(0, 5) : "Geen tijd";
+}
+
+function parseDateOnly(value: string) {
+  const [year, month, date] = value.split("-").map(Number);
+  return new Date(year, month - 1, date);
+}
+
+function Section({ icon: Icon, title, countLabel, items, render, empty }: any) {
   return (
     <div className="mb-5">
-      <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-        <Icon className="w-4 h-4" strokeWidth={1.75} />
-        <span className="text-xs uppercase tracking-wider">{title}</span>
+      <div className="flex items-center justify-between gap-3 mb-2 text-muted-foreground">
+        <div className="flex items-center gap-2 min-w-0">
+          <Icon className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+          <span className="text-xs uppercase tracking-wider truncate">{title}</span>
+        </div>
+        {countLabel ? <span className="text-xs font-medium text-foreground shrink-0">{countLabel}</span> : null}
       </div>
       <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] divide-y divide-border overflow-hidden">
         {items && items.length > 0 ? (
