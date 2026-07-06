@@ -279,14 +279,16 @@ function PetDetail() {
       </AlertDialog>
 
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="w-full rounded-full bg-card border border-border p-1 h-11 grid grid-cols-6">
-          <TabsTrigger value="info" className="rounded-full text-[11px]">Overzicht</TabsTrigger>
-          <TabsTrigger value="app" className="rounded-full text-[11px]">Afspraken</TabsTrigger>
-          <TabsTrigger value="med" className="rounded-full text-[11px]">Medicatie</TabsTrigger>
-          <TabsTrigger value="vac" className="rounded-full text-[11px]">Vaccinaties</TabsTrigger>
-          <TabsTrigger value="doc" className="rounded-full text-[11px]">Documenten</TabsTrigger>
-          <TabsTrigger value="exp" className="rounded-full text-[11px]">Kosten</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-1 px-1">
+          <TabsList className="inline-flex w-max rounded-full bg-card border border-border p-1 h-11 gap-1">
+            <TabsTrigger value="info" className="rounded-full text-xs px-3">Overzicht</TabsTrigger>
+            <TabsTrigger value="app" className="rounded-full text-xs px-3">Afspraken</TabsTrigger>
+            <TabsTrigger value="med" className="rounded-full text-xs px-3">Medicatie</TabsTrigger>
+            <TabsTrigger value="vac" className="rounded-full text-xs px-3">Vaccinaties</TabsTrigger>
+            <TabsTrigger value="doc" className="rounded-full text-xs px-3">Documenten</TabsTrigger>
+            <TabsTrigger value="exp" className="rounded-full text-xs px-3">Kosten</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="info" className="mt-5" id="info">
           <InfoList pet={pet} />
@@ -423,6 +425,7 @@ function SubList({
 
 function DocsList({ petId }: { petId: string }) {
   const qc = useQueryClient();
+  const [editRow, setEditRow] = useState<any | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ["documents", petId],
     queryFn: async () => {
@@ -458,20 +461,29 @@ function DocsList({ petId }: { petId: string }) {
       {isLoading ? (
         <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] py-8 text-center text-sm text-muted-foreground">Documenten laden…</div>
       ) : !data || data.length === 0 ? (
-        <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] py-8 text-center text-sm text-muted-foreground">Nog geen documenten</div>
+        <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] py-8 text-center text-sm text-muted-foreground">Nog geen documenten toegevoegd.</div>
       ) : (
-        <div className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] divide-y divide-border overflow-hidden">
-          {data.map((r) => (
-            <div key={r.id} className="px-5 py-4 flex items-start justify-between gap-3">
-              <button className="text-left min-w-0 flex-1" onClick={() => openDoc(r)}>
+        <div className="space-y-3">
+          {data.map((r: any) => (
+            <div key={r.id} className="bg-card rounded-3xl border border-border shadow-[var(--shadow-soft)] p-4">
+              <div className="min-w-0">
                 <div className="text-sm font-medium truncate">{r.title}</div>
-                <div className="text-xs text-muted-foreground truncate">{r.date || ""} {r.notes ? `• ${r.notes}` : ""}</div>
-              </button>
-              <ConfirmDelete onConfirm={() => del.mutate(r)} title="Document verwijderen?" />
+                <div className="text-xs text-muted-foreground truncate mt-0.5">
+                  {r.type ? <span className="uppercase tracking-wider">{r.type}</span> : <span className="uppercase tracking-wider">Document</span>}
+                  {r.date ? <> · {r.date}</> : null}
+                </div>
+                {r.notes ? <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{r.notes}</div> : null}
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <Button size="sm" variant="outline" className="rounded-full h-9" disabled={!r.file_path} onClick={() => openDoc(r)}>Openen</Button>
+                <Button size="sm" variant="outline" className="rounded-full h-9" onClick={() => setEditRow(r)}><Pencil className="w-4 h-4 mr-1" />Bewerken</Button>
+                <div className="ml-auto"><ConfirmDelete onConfirm={() => del.mutate(r)} title="Document verwijderen?" /></div>
+              </div>
             </div>
           ))}
         </div>
       )}
+      {editRow ? <EditDocDialog petId={petId} row={editRow} onClose={() => setEditRow(null)} /> : null}
     </div>
   );
 }
@@ -480,6 +492,7 @@ function UploadDocDialog({ petId }: { petId: string }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
+  const [type, setType] = useState("");
   const [date, setDate] = useState("");
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -495,14 +508,14 @@ function UploadDocDialog({ petId }: { petId: string }) {
         if (up.error) throw up.error;
       }
       const { error } = await supabase.from("documents").insert({
-        user_id: uid, pet_id: petId, title, date: date || null, notes: notes || null, file_path,
+        user_id: uid, pet_id: petId, title, type: type || null, date: date || null, notes: notes || null, file_path,
       });
       if (error) throw error;
     },
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["documents", petId], refetchType: "all" });
       toast.success("Document geüpload");
-      setOpen(false); setTitle(""); setDate(""); setNotes(""); setFile(null);
+      setOpen(false); setTitle(""); setType(""); setDate(""); setNotes(""); setFile(null);
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -515,6 +528,8 @@ function UploadDocDialog({ petId }: { petId: string }) {
         <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-3">
           <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Titel</Label>
             <Input required value={title} onChange={(e) => setTitle(e.target.value)} className="rounded-xl h-11" /></div>
+          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Type</Label>
+            <Input value={type} onChange={(e) => setType(e.target.value)} placeholder="Bijv. Paspoort, Factuur" className="rounded-xl h-11" /></div>
           <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Bestand</Label>
             <Input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="rounded-xl h-11" /></div>
           <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Datum</Label>
@@ -524,6 +539,52 @@ function UploadDocDialog({ petId }: { petId: string }) {
           <DialogFooter>
             <Button type="submit" disabled={mut.isPending} className="w-full h-12 rounded-full">
               {mut.isPending ? "Uploaden…" : "Uploaden"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditDocDialog({ petId, row, onClose }: { petId: string; row: any; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [title, setTitle] = useState(row.title ?? "");
+  const [type, setType] = useState(row.type ?? "");
+  const [date, setDate] = useState(row.date ?? "");
+  const [notes, setNotes] = useState(row.notes ?? "");
+
+  const mut = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("documents").update({
+        title, type: type || null, date: date || null, notes: notes || null,
+      }).eq("id", row.id);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["documents", petId], refetchType: "all" });
+      toast.success("Document bijgewerkt");
+      onClose();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="rounded-3xl max-w-md">
+        <DialogHeader><DialogTitle className="font-display text-2xl">Document bewerken</DialogTitle></DialogHeader>
+        <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-3">
+          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Titel</Label>
+            <Input required value={title} onChange={(e) => setTitle(e.target.value)} className="rounded-xl h-11" /></div>
+          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Type</Label>
+            <Input value={type} onChange={(e) => setType(e.target.value)} className="rounded-xl h-11" /></div>
+          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Datum</Label>
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="rounded-xl h-11" /></div>
+          <div className="space-y-1.5"><Label className="text-xs uppercase tracking-wider text-muted-foreground">Notities</Label>
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="rounded-xl" /></div>
+          <DialogFooter>
+            <Button type="submit" disabled={mut.isPending} className="w-full h-12 rounded-full">
+              {mut.isPending ? "Opslaan…" : "Opslaan"}
             </Button>
           </DialogFooter>
         </form>
