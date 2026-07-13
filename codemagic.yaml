@@ -1,0 +1,64 @@
+workflows:
+  android-aab:
+    name: PetKeeper Android AAB
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      groups:
+        - keystore_credentials # CM_KEYSTORE, CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS, CM_KEY_PASSWORD
+      vars:
+        PACKAGE_NAME: "app.lovable.petkeeper"
+      node: 20
+      java: 21
+    triggering:
+      events:
+        - push
+        - tag
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+    scripts:
+      - name: Install bun
+        script: |
+          curl -fsSL https://bun.sh/install | bash
+          echo 'export PATH="$HOME/.bun/bin:$PATH"' >> $CM_ENV
+      - name: Install dependencies
+        script: |
+          export PATH="$HOME/.bun/bin:$PATH"
+          bun install
+      - name: Capacitor sync
+        script: |
+          export PATH="$HOME/.bun/bin:$PATH"
+          bun run cap:sync
+      - name: Set up keystore
+        script: |
+          echo $CM_KEYSTORE | base64 --decode > $CM_BUILD_DIR/android/app/keystore.jks
+          cat >> $CM_BUILD_DIR/android/key.properties <<EOF
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyPassword=$CM_KEY_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          storeFile=keystore.jks
+          EOF
+      - name: Set Android SDK location
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Build Android App Bundle (release)
+        script: |
+          cd android
+          ./gradlew bundleRelease
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+      - android/app/build/outputs/**/mapping.txt
+    publishing:
+      email:
+        recipients:
+          - # add your email here
+        notify:
+          success: true
+          failure: true
+      # Uncomment and configure to auto-publish to Google Play:
+      # google_play:
+      #   credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+      #   track: internal
+      #   submit_as_draft: true
