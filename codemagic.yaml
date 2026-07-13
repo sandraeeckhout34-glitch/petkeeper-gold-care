@@ -8,7 +8,7 @@ workflows:
         - keystore_credentials # CM_KEYSTORE, CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS, CM_KEY_PASSWORD
       vars:
         PACKAGE_NAME: "app.lovable.petkeeper"
-      node: 20
+      node: 22
       java: 21
     triggering:
       events:
