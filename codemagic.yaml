@@ -50,15 +50,3 @@ workflows:
     artifacts:
       - android/app/build/outputs/**/*.aab
       - android/app/build/outputs/**/mapping.txt
-    publishing:
-      email:
-        recipients:
-          - # add your email here
-        notify:
-          success: true
-          failure: true
-      # Uncomment and configure to auto-publish to Google Play:
-      # google_play:
-      #   credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-      #   track: internal
-      #   submit_as_draft: true
