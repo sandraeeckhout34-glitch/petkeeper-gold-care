@@ -26,7 +26,7 @@ Create new release**.
 
 ## App-configuratie
 
-- `applicationId`: `app.lovable.petkeeper` — moet uniek zijn in Play Console.
+- `applicationId`: `com.esdesign.petkeeper` — moet uniek zijn in Play Console.
   Wijzig in `android/app/build.gradle` én in `capacitor.config.ts` als je
   een andere ID wil.
 - App-naam: `android/app/src/main/res/values/strings.xml` → `app_name`.
