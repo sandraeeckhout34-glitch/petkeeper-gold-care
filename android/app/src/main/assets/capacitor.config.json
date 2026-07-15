@@ -1,0 +1,13 @@
+{
+	"appId": "com.esdesign.petkeeper",
+	"appName": "PetKeeper",
+	"webDir": "www",
+	"server": {
+		"url": "https://petkeeper-gold-care.lovable.app",
+		"cleartext": false,
+		"androidScheme": "https"
+	},
+	"android": {
+		"allowMixedContent": false
+	}
+}
