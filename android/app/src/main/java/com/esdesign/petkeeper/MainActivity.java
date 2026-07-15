@@ -1,4 +1,4 @@
-package app.lovable.petkeeper;
+package com.esdesign.petkeeper;
 
 import com.getcapacitor.BridgeActivity;
 

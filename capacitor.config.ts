@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.petkeeper',
+  appId: 'com.esdesign.petkeeper',
   appName: 'PetKeeper',
   webDir: 'www',
   server: {
