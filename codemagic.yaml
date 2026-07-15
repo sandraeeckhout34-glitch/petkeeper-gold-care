@@ -34,12 +34,12 @@ workflows:
       - name: Set up keystore
         script: |
           printf "%s" "$CM_KEYSTORE" | base64 --decode > "$CM_BUILD_DIR/android/app/keystore.jks"
-          cat >> $CM_BUILD_DIR/android/key.properties <<EOF
-          storePassword=$CM_KEYSTORE_PASSWORD
-          keyPassword=$CM_KEY_PASSWORD
-          keyAlias=$CM_KEY_ALIAS
-          storeFile=keystore.jks
-          EOF
+                   cat >> $CM_BUILD_DIR/android/key.properties <<EOF
+                   storePassword=$CM_KEYSTORE_PASSWORD
+                   keyPassword=$CM_KEY_PASSWORD
+                   keyAlias=$CM_KEY_ALIAS
+                   storeFile=keystore.jks
+                   EOF
       - name: Set Android SDK location
         script: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
