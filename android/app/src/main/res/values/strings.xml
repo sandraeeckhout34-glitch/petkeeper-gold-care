@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">PetKeeper</string>
     <string name="title_activity_main">PetKeeper</string>
-    <string name="package_name">app.lovable.petkeeper</string>
-    <string name="custom_url_scheme">app.lovable.petkeeper</string>
+    <string name="package_name">com.esdesign.petkeeper</string>
+    <string name="custom_url_scheme">com.esdesign.petkeeper</string>
 </resources>
