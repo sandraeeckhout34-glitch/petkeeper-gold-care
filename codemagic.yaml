@@ -33,7 +33,9 @@ workflows:
           bun run cap:sync
       - name: Set up keystore
         script: |
-         printf "%s" "$CM_KEYSTORE" | base64 --decode > "$CM_BUILD_DIR/android/app/keystore.jks"
+        printf "%s" "$CM_KEYSTORE" | base64 --decode > "$CM_BUILD_DIR/android/app/keystore.jks"
+ls -l "$CM_BUILD_DIR/android/app/keystore.jks"
+file "$CM_BUILD_DIR/android/app/keystore.jks"
           cat >> $CM_BUILD_DIR/android/key.properties <<EOF
           storePassword=$CM_KEYSTORE_PASSWORD
           keyPassword=$CM_KEY_PASSWORD
